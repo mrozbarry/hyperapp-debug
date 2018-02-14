@@ -1,0 +1,27 @@
+{
+  "name": "hypeapp-debug",
+  "version": "0.0.1",
+  "main": "index.js",
+  "browser": "index.js",
+  "module": "src/index.js",
+  "license": "MIT",
+  "dependencies": {
+    "hyperapp": "^1.1.2",
+    "lodash": "^4.17.5"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.0.0-beta.40",
+    "@babel/plugin-transform-react-jsx": "^7.0.0-beta.40",
+    "@babel/preset-env": "^7.0.0-beta.40",
+    "@babel/preset-stage-1": "^7.0.0-beta.40",
+    "babel-loader": "^8.0.0-beta.0",
+    "lodash-webpack-plugin": "^0.11.4",
+    "webpack": "^3.11.0",
+    "webpack-dev-server": "^2.11.1"
+  },
+  "scripts": {
+    "start": "webpack-dev-server --config ./example/webpack.config.js",
+    "build": "webpack --config ./config/webpack.build.js",
+    "prepublish": "yarn build"
+  }
+}
