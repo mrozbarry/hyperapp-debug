@@ -1,5 +1,5 @@
 {
-  "name": "hypeapp-debug",
+  "name": "hyperapp-debug",
   "version": "0.0.1-beta.0",
   "main": "index.js",
   "browser": "index.js",

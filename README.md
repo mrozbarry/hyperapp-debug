@@ -6,7 +6,7 @@ A debugger for hyperapp development.
 ## Get it
 
 ```bash
-yarn add https://github.com/mrozbarry/hyperapp-debug.git
+yarn add hyperapp-debug
 ```
 
 ## Use it:
