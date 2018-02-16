@@ -1,6 +1,8 @@
 import { h } from 'hyperapp';
 import isPlainObject from 'lodash.isplainobject';
 
+const maxArraySize = 10;
+
 export const initialState = {
   exposeId: 1,
 };
@@ -19,7 +21,7 @@ export const view = (state, actions) => (
   <ShowValue value={state} {...actions} />
 );
 
-const ShowValue = ({ exposeVariable, name, value, indent = 0 }) => {
+const ShowValue = ({ exposeVariable, name, value }) => {
   const makeAnchor = () => (
     typeof name !== undefined
       ? <a
@@ -41,18 +43,27 @@ const ShowValue = ({ exposeVariable, name, value, indent = 0 }) => {
     ? '[]'
     : null
 
+  let keys = Object.keys(value);
+  let prependAll = '';
+
+  if (Array.isArray(value) && value.length > maxArraySize) {
+    const hidden = value.length - maxArraySize
+    keys = keys.slice(-maxArraySize)
+    prependAll = `...${hidden} Items`
+  }
+
   if (wrappers) {
     return (
       <div>
         {makeAnchor()} {wrappers[0]}
         <div class="object">
-          {Object.keys(value).filter(k => !k.startsWith('$debug')).map((k, idx) => (
+          {prependAll}
+          {keys.filter(k => !k.startsWith('$debug')).map((k, idx) => (
             <ShowValue
               key={idx}
               exposeVariable={exposeVariable}
               name={k}
               value={value[k]}
-              indent={indent + 1}
             />
           ))}
         </div>

@@ -19,13 +19,14 @@
     "css-loader": "^0.28.9",
     "lodash-webpack-plugin": "^0.11.4",
     "style-loader": "^0.20.1",
+    "stylus": "^0.54.5",
+    "stylus-loader": "^3.0.1",
     "uglifyjs-webpack-plugin": "^1.1.8",
     "webpack": "^3.11.0",
     "webpack-dev-server": "^2.11.1"
   },
   "scripts": {
     "start": "webpack-dev-server --config ./example/webpack.config.js",
-    "build": "webpack --config ./config/webpack.build.js",
-    "prepublish": "yarn build"
+    "build": "webpack --config ./config/webpack.build.js"
   }
 }

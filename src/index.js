@@ -1,6 +1,6 @@
 import { h } from 'hyperapp';
 import * as Explorer from './Explorer'
-import './index.css';
+import './index.styl';
 
 const debugState = {
   expanded: true,
@@ -38,16 +38,18 @@ const debugActions = {
   },
 
   resume: () => state => {
-    if (!state.appActions) return;
+    if (!state.appActions || !state.isTimeTravelling) return;
 
     const idx = state.states.length - 1;
+    console.log('Resuming', idx, state);
+    console.log(state.states[idx]);
 
     state.appActions.$debugSetState(state.states[idx]);
 
     return {
       isTimeTravelling: false,
       stateIdx: idx,
-      states: state.states.slice(0, -1),
+      states: state.states,
     }
   },
 
@@ -76,7 +78,7 @@ const debugView = (state, actions) => (
     <div class="ticker">
       <div class="text" style={{ backgroundColor: '#c0392b' }}>{state.contractedCounter}</div>
       <div
-        class="text"
+        class="button text"
         style={{
           backgroundColor: '#34495e',
           cursor: 'pointer',
@@ -89,7 +91,7 @@ const debugView = (state, actions) => (
     <div class="full">
       <header>
         <h1>Hyperapp Debugger</h1>
-        <button onclick={actions.toggleExpanded}>Hide</button>
+        <div class="button" onclick={actions.toggleExpanded}>Hide</div>
       </header>
       <div style={{ display: 'flex', width: '100%' }}>
         <input
@@ -106,12 +108,22 @@ const debugView = (state, actions) => (
         />
         <div style={{ flexShrink: 1 }}>{state.stateIdx}</div>
       </div>
-      <a
-        class="resume"
-        disabled={!state.isTimeTravelling}
-        href="#"
-        onclick={() => actions.resume()}
-      >Resume</a>
+      <div style={{ display: 'flex', flexDirection: 'row', width: '100%' }}>
+        <div
+          class="button pause"
+          disabled={state.isTimeTravelling}
+          onclick={() => actions.timeTravelTo(state.states.length - 1)}
+        >
+          Pause
+        </div>
+        <div
+          class="button resume"
+          disabled={!state.isTimeTravelling}
+          onclick={actions.resume}
+        >
+          Resume
+        </div>
+      </div>
       <div id="hyperapp-debugger-explorer">
         {state.states.length > 0 && Explorer.view(state.states[state.stateIdx], actions.explorer)}
       </div>
@@ -140,6 +152,7 @@ export default (app) => (appState, appActions, appView, ...rest) => {
   );
 
   debug.importAppActions(realApp);
+  debug.pushState(appState);
 
   return realApp;
 };
