@@ -93,8 +93,9 @@ const debugView = (state, actions) => (
         <h1>Hyperapp Debugger</h1>
         <div class="button" onclick={actions.toggleExpanded}>Hide</div>
       </header>
-      <div style={{ display: 'flex', width: '100%' }}>
+      <div class="controls">
         <input
+          class="time-travel"
           type="range"
           disabled={state.states.length === 0}
           min={0}
@@ -104,11 +105,10 @@ const debugView = (state, actions) => (
           oninput={e => {
             actions.timeTravelTo(Number(e.target.value));
           }}
-          style={{ flexGrow: 1 }}
         />
-        <div style={{ flexShrink: 1 }}>{state.stateIdx}</div>
+        <div class="current-time">{state.stateIdx}</div>
       </div>
-      <div style={{ display: 'flex', flexDirection: 'row', width: '100%' }}>
+      <div class="controls">
         <div
           class="button pause"
           disabled={state.isTimeTravelling}
