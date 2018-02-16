@@ -1,5 +1,5 @@
 import { h } from 'hyperapp';
-import { isPlainObject } from 'lodash/fp';
+import isPlainObject from 'lodash.isplainobject';
 
 export const initialState = {
   exposeId: 1,

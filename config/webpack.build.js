@@ -1,6 +1,6 @@
 const path = require('path');
 const lodashPlugin = require('lodash-webpack-plugin');
-const webpack = require('webpack');
+const Uglify = require('uglifyjs-webpack-plugin');
 
 module.exports = {
   entry: path.resolve(__dirname, '..', 'src', 'index.js'),
@@ -8,10 +8,9 @@ module.exports = {
   output: {
     path: path.resolve(__dirname, '..'),
     filename: 'index.js',
-  },
-
-  externals: {
-    hyperapp: 'hyperapp',
+    library: 'hyperapp-debug',
+    libraryTarget: 'umd',
+    umdNamedDefine: true,
   },
 
   module: {
@@ -21,8 +20,11 @@ module.exports = {
     ],
   },
 
+  externals: {
+    hyperapp: 'hyperapp',
+  },
+
   plugins: [
-    new lodashPlugin(),
-    new webpack.optimize.UglifyJsPlugin(),
+    new Uglify(),
   ],
 }
