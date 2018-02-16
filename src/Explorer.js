@@ -15,66 +15,48 @@ export const actions = {
   },
 };
 
-export const view = (state, actions) => {
-  return (
-    <div style={{ fontFamily: 'monospace' }}>
-      <ShowValue value={state} {...actions} />
-    </div>
-  );
-};
+export const view = (state, actions) => (
+  <ShowValue value={state} {...actions} />
+);
 
-const ShowValue = ({ exposedId, exposeVariable, _key, value, indent = 0 }) => {
+const ShowValue = ({ exposeVariable, name, value, indent = 0 }) => {
   const makeAnchor = () => (
-    typeof _key !== undefined
+    typeof name !== undefined
       ? <a
+          class="object-key"
           href="#"
           onclick={(e) => {
             e.preventDefault();
             exposeVariable(value);
           }}
-          style={{
-            color: '#3498db',
-          }}
         >
-          {_key}
+          {name}
         </a>
       : null
   );
 
-  if (isPlainObject(value)) {
+  const wrappers = isPlainObject(value)
+    ? '{}'
+    : Array.isArray(value)
+    ? '[]'
+    : null
+
+  if (wrappers) {
     return (
       <div>
-        {makeAnchor()} {'{'}
-        <div style={{ paddingLeft: '1rem' }}>
+        {makeAnchor()} {wrappers[0]}
+        <div class="object">
           {Object.keys(value).filter(k => !k.startsWith('$debug')).map((k, idx) => (
             <ShowValue
               key={idx}
               exposeVariable={exposeVariable}
-              _key={k}
+              name={k}
               value={value[k]}
               indent={indent + 1}
             />
           ))}
         </div>
-        {'}'}
-      </div>
-    )
-  } else if (Array.isArray(value)) {
-    return (
-      <div>
-        {makeAnchor()} {'['}
-        <div style={{ paddingLeft: '1rem' }}>
-          {value.map((v, idx) => (
-            <ShowValue
-              key={idx}
-              exposeVariable={exposeVariable}
-              _key={idx}
-              value={v}
-              indent={indent + 1}
-            />
-          ))}
-        </div>
-        {']'}
+        {wrappers[1]}
       </div>
     )
   }
@@ -84,36 +66,4 @@ const ShowValue = ({ exposedId, exposeVariable, _key, value, indent = 0 }) => {
       {makeAnchor()} {JSON.stringify(value)}
     </div>
   )
-
-  if (!isPlainObject(src) && !Array.isArray(src)) return null;
-
-  const keys = Object.keys(src)
-    .filter(key => !key.startsWith('$debug'));
-
-  return keys.map((key, idx) => {
-    return (
-      <div key={parents.concat([key, idx]).join('.')} style={{ marginBottom: '5px', lineHeight: 1.5 }}>
-        <div
-          style={{
-            display: 'inline-block',
-            color: '#e74c3c',
-            borderBottom: '1px #c0392b dotted',
-            cursor: 'pointer',
-          }}
-          onclick={(e) => exposeVariable(src[key])}
-        >
-          {parents.concat(key).join('.')}
-        </div>
-        <div style={{ maxWidth: '400px', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
-          {JSON.stringify(src[key])}
-        </div>
-
-        <ShowValue
-          exposeVariable={exposeVariable}
-          src={src[key]}
-          parents={parents.concat(key)}
-        />
-      </div>
-    );
-  });
 }

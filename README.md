@@ -13,18 +13,14 @@ yarn add https://github.com/mrozbarry/hyperapp-debug.git
 
 ```javascript
 import { app, h } from 'hyperapp';
-import hyperappDebug from 'hyperapp-debug';
+import debug from 'hyperapp-debug';
 
 import { initialState, actions, view } from './yourApp.js';
 
-// Or whatever...maybe you have index.development.js and index.production.js, and don't need this.
-// In this case, use the debugger in development, otherwise don't
-const USE_DEBUGGER = process.env.NODE_ENV === 'development';
-
-const hyperApp = USE_DEBUGGER ? hyperappDebug : app;
-
-export default hyperApp(initialState, actions, view, document.body);
+export default debug(app)(initialState, actions, view, document.body);
 ```
+
+You probably won't want to use this in a production environment.
 
 ## Check out the demo app
 
