@@ -4,7 +4,7 @@ const webpack = require('webpack');
 module.exports = {
   devtool: 'cheap-eval-source-map',
 
-  entry: path.resolve(__dirname, 'App.js'),
+  entry: path.resolve(__dirname, '..', 'example', 'App.js'),
 
   output: {
     filename: 'bundle.js',
@@ -26,9 +26,9 @@ module.exports = {
   target: 'web',
 
   devServer: {
-    port: 1234,
+    port: 8080,
     host: '0.0.0.0',
-    contentBase: path.resolve(__dirname),
+    contentBase: path.resolve(__dirname, '..', 'example'),
     hot: true,
   },
 };

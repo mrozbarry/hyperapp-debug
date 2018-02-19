@@ -2,5 +2,10 @@
   "plugins": [
     ["@babel/plugin-transform-react-jsx", { "pragma": "h" }]
   ],
-  "presets": ["@babel/preset-env", "@babel/preset-stage-1"]
+  "presets": ["@babel/preset-env", "@babel/preset-stage-1"],
+  "env": {
+    "test": {
+      "presets": ["@ava/babel-preset-stage-4"]
+    }
+  }
 }

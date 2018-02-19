@@ -2,6 +2,8 @@
   position fixed
   top 0
   right 0
+  height auto
+  max-height 100vh
 
   *
     box-sizing border-box
@@ -24,20 +26,19 @@
       color #fff
       padding 1rem 0.5rem
 
-  &:not(.expanded) .ticker
+  .container:not(.expanded) .ticker
     transform translateX(0)
 
   .full
-    position absolute
-    top 0
-    right 0
     background-color #2c3e50
     color #ecf0f1
     padding 15px
     width 400px
+    max-height 100vh
+    overflow auto
     transition transform .3s ease-in-out
 
-  &:not(.expanded) .full
+  .container:not(.expanded) .full
     transform translateX(100%)
 
   .controls
@@ -85,6 +86,13 @@
 
     .button
       flex-shrink 1
+
+  .replay
+    background-color #27ae60
+    flex-shrink 1
+
+    &:not([disabled]):hover
+      background-color #2ecc71
 
   .resume
     background-color #27ae60
