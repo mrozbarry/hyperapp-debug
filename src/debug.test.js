@@ -1,6 +1,6 @@
 import test from 'ava';
 import sinon from 'sinon';
-import { state as initialState, actions, view } from './debug'
+import { initialState, actions, view } from './debug'
 
 const runActions = transforms => (state, actions) =>
   transforms.reduce((nextState, transform) => {
