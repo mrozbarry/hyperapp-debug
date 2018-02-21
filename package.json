@@ -30,8 +30,9 @@
     "webpack-dev-server": "^2.11.1"
   },
   "scripts": {
-    "start": "webpack-dev-server --config ./config/webpack.example.js",
     "build": "webpack --config ./config/webpack.build.js",
+    "prepublishOnly": "yarn build",
+    "start": "webpack-dev-server --config ./config/webpack.example.js",
     "test": "ava"
   },
   "ava": {
