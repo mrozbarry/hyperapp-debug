@@ -1,13 +1,14 @@
 import { h } from 'hyperapp';
 import * as Explorer from './explorer'
 
-export const state = {
+export const initialState = {
   expanded: true,
   contractedCounter: 0,
   appActions: null,
   states: [],
   stateIdx: null,
   isTimeTravelling: false,
+  ignoreNextState: false,
   explorer: Explorer.initialState,
 };
 
@@ -24,15 +25,18 @@ export const actions = {
       return;
     }
 
-    const states = state.states
-      .slice(0, state.stateIdx + 1)
-      .concat(newState);
+    const states = state.ignoreNextState
+      ? state.states
+      : state.states
+        .slice(0, state.stateIdx + 1)
+        .concat(newState);
 
     return {
       states,
       stateIdx: states.length - 1,
       isTimeTravelling: false,
       contractedCounter: state.contractedCounter + 1,
+      ignoreNextState: false,
     };
   },
 
@@ -46,7 +50,18 @@ export const actions = {
     return {
       isTimeTravelling: false,
       stateIdx: idx,
+      ignoreNextState: true,
     }
+  },
+
+  detachResume: () => (state, actions) => {
+    if (!state.appActions || !state.isTimeTravelling) return;
+
+    const states = state.states.slice(0, state.stateIdx + 1)
+
+    actions.resume();
+
+    return { states };
   },
 
   timeTravelTo: index => (state, actions) => {
@@ -63,6 +78,41 @@ export const actions = {
   toggleExpanded: () => state => ({
     expanded: !state.expanded,
     contractedCounter: state.expanded ? 0 : state.contractedCounter,
+  }),
+
+  export: event => state => {
+    event.preventDefault();
+
+    const e = document.createElement('a');
+    e.style = 'display: none;';
+    document.body.appendChild(e);
+
+    const blob = new Blob([
+      JSON.stringify(state.states),
+    ], { type: 'octet/stream' });
+    e.href = window.URL.createObjectURL(blob);
+    e.download = 'app-states.json';
+    e.click();
+    window.URL.revokeObjectURL(e.href);
+    e.remove();
+  },
+
+  import: event => (state, actions) => {
+    const fr = new FileReader()
+
+    fr.onload = (readerEvent) => {
+      console.log(readerEvent);
+      actions.resetAndSetStates(JSON.parse(readerEvent.target.result));
+    }
+
+    fr.readAsText(event.target.files[0])
+  },
+
+  resetAndSetStates: states => state => ({
+    ...initialState,
+    appActions: state.appActions,
+    states: states,
+    stateIdx: states.length > 0 ? 0 : null,
   }),
 
   explorer: Explorer.actions,
@@ -106,24 +156,44 @@ export const view = (state, actions) => (
         <div class="current-time">{state.stateIdx}</div>
       </div>
       <div class="controls">
+        {state.isTimeTravelling && state.stateIdx !== (state.states.length - 1) &&
+          <div
+            class="button detach"
+            onclick={actions.detachResume}
+            title="Resume interactivity, but from the current state."
+          >
+            Detach
+          </div>
+        }
         <div
-          class="button pause"
-          disabled={state.isTimeTravelling}
-          onclick={() => actions.timeTravelTo(state.states.length - 1)}
+          key="playback"
+          class={['button', state.isTimeTravelling ? 'resume' : 'pause'].join(' ')}
+          onclick={() => (
+            state.isTimeTravelling
+              ? actions.resume()
+              : actions.timeTravelTo(state.states.length - 1)
+          )}
+          title="Toggle debug mode."
         >
-          Pause
-        </div>
-
-        <div
-          class="button resume"
-          disabled={!state.isTimeTravelling}
-          onclick={actions.resume}
-        >
-          Resume
+          {state.isTimeTravelling ? 'Resume' : 'Pause'}
         </div>
       </div>
       <div id="hyperapp-debugger-explorer">
         {state.states.length > 0 && Explorer.view(state.states[state.stateIdx], actions.explorer)}
+      </div>
+      <div class="external">
+        <a href="#" onclick={actions.export}>Export</a>
+        &nbsp;/&nbsp;
+        <label for="hyperapp-debug-import">
+          Import
+        </label>
+        <input
+          id="hyperapp-debug-import"
+          style={{ outline: 'none', width: 0, height: 0 }}
+          type="file"
+          onchange={actions.import}
+        />
+
       </div>
     </div>
   </div>

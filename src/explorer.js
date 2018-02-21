@@ -49,7 +49,7 @@ const ShowValue = ({ exposeVariable, name, value }) => {
   if (Array.isArray(value) && value.length > maxArraySize) {
     const hidden = value.length - maxArraySize
     keys = keys.slice(-maxArraySize)
-    prependAll = `...${hidden} Items`
+    prependAll = '...'
   }
 
   if (wrappers) {

@@ -1,42 +1,32 @@
 # <img height=24 src=https://cdn.rawgit.com/JorgeBucaran/f53d2c00bafcf36e84ffd862f0dc2950/raw/882f20c970ff7d61aa04d44b92fc3530fa758bc0/Hyperapp.svg> Hyperapp Debug
 
 ![](https://img.shields.io/npm/l/hyperapp-debug.svg)
-[![](https://img.shields.io/npm/v/hyperapp-debug.svg)](https://www.npmjs.com/package/hyperapp-debug)
-[![](https://img.shields.io/travis/mrozbarry/hyperapp-debug.svg)](https://travis-ci.org/mrozbarry/hyperapp-debug)
+[![npm](https://img.shields.io/npm/v/hyperapp-debug.svg)](https://www.npmjs.com/package/hyperapp-debug)
+[![Travis CI](https://img.shields.io/travis/mrozbarry/hyperapp-debug.svg)](https://travis-ci.org/mrozbarry/hyperapp-debug)
+[![Slack](https://hyperappjs.herokuapp.com/badge.svg)](https://hyperappjs.herokuapp.com "Join us")
 
-A high-order app wrapper for debugging your application's state.
+A debugging high-order app for [Hyperapp](https://github.com/JorgeBucaran/hyperapp).
 
 ## Installation
 
-Install with your favorite node package manager:
+Install with npm or Yarn.
 
-```bash
-npm install --save-dev hyperapp-debug
-# Or
-yarn add --dev hyperapp-debug
-```
+<pre>
+npm i <a href=https://www.npmjs.com/package/hyperapp-debug>hyperapp-debug</a>
+</pre>
 
-And import it:
+Then with a module bundler like [Rollup](https://rollupjs.org) or [Webpack](https://webpack.js.org), use as you would anything else.
 
 ```javascript
 import { app, h } from 'hyperapp';
 import debug from 'hyperapp-debug';
 ```
 
-You can also grab it from [unpkg](https://unpkg.com/hyperapp-debug) in your HTML file:
+If you don't want to set up a build environment, you can download Hyperapp Debug from a CDN like [unpkg.com](https://unpkg.com/hyperapp-debug) and it will be globally available through the <samp>window['hyperapp-debug'].default</samp> object. We support all ES5-compliant browsers, including Internet Explorer 10 and above.
 
-```html
-<!doctype html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <script src="https://unpkg.com/hyperapp"></script>
-  <script src="https://unpkg.com/hyperapp-debug"></script><!-- exposed as `window['hyperapp-debug'].default`
-</head>
-</html>
-```
+## Overview
 
-## Usage
+### Usage
 
 By wrapping hyperapp's `app`, the debug app gets mounted and wired into your app code.
 
@@ -48,10 +38,26 @@ import { state, actions, view } from './your-app.js';
 debug(app)(state, actions, view);
 ```
 
-## Caveats
+### History
+
+For those coming from the elm community, you may notice much inspiration from [elm's time-travelling debugger](http://debug.elm-lang.org/edit/Thwomp.elm).
+
+### Notes
 
  1. As part of wrapping the app function, hyperapp-debug injects `$debugSetState` into your actions object to forcefully set the state of your app.
  2. `debug(app)` should probably not be used in production, since it will allow users to inspect your state, it may expose information you don't want exposed.
+
+## Examples
+
+ - [Hyperapp todo list with debug](https://codepen.io/mrozbarry/pen/JpMPrK)
+ - [Hyperapp tweet with debug](https://codepen.io/mrozbarry/pen/zRjvOV)
+
+## Community
+
+* [Slack](https://hyperappjs.herokuapp.com)
+* [Twitter](https://twitter.com/hyperappJS)
+* [CodePen](https://codepen.io/hyperapp)
+* [/r/Hyperapp](https://www.reddit.com/r/hyperapp)
 
 ## License
 
