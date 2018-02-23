@@ -17,20 +17,18 @@ npm i <a href=https://www.npmjs.com/package/hyperapp-debug>hyperapp-debug</a>
 
 Then with a module bundler like [Rollup](https://rollupjs.org) or [Webpack](https://webpack.js.org), use as you would anything else.
 
-```javascript
+```js
 import { app, h } from 'hyperapp';
 import debug from 'hyperapp-debug';
 ```
 
 If you don't want to set up a build environment, you can download Hyperapp Debug from a CDN like [unpkg.com](https://unpkg.com/hyperapp-debug) and it will be globally available through the <samp>window['hyperapp-debug'].default</samp> object. We support all ES5-compliant browsers, including Internet Explorer 10 and above.
 
-## Overview
-
-### Usage
+## Usage
 
 By wrapping hyperapp's `app`, the debug app gets mounted and wired into your app code.
 
-```javascript
+```js
 import { app, h } from 'hyperapp';
 import debug from 'hyperapp-debug';
 import { state, actions, view } from './your-app.js';
@@ -38,11 +36,11 @@ import { state, actions, view } from './your-app.js';
 debug(app)(state, actions, view);
 ```
 
-### History
+## History
 
 For those coming from the elm community, you may notice much inspiration from [elm's time-travelling debugger](http://debug.elm-lang.org/edit/Thwomp.elm).
 
-### Notes
+## Notes
 
  1. As part of wrapping the app function, hyperapp-debug injects `$debugSetState` into your actions object to forcefully set the state of your app.
  2. `debug(app)` should probably not be used in production, since it will allow users to inspect your state, it may expose information you don't want exposed.
@@ -52,13 +50,6 @@ For those coming from the elm community, you may notice much inspiration from [e
  - [Hyperapp todo list with debug](https://codepen.io/mrozbarry/pen/JpMPrK)
  - [Hyperapp tweet with debug](https://codepen.io/mrozbarry/pen/zRjvOV)
 
-## Community
-
-* [Slack](https://hyperappjs.herokuapp.com)
-* [Twitter](https://twitter.com/hyperappJS)
-* [CodePen](https://codepen.io/hyperapp)
-* [/r/Hyperapp](https://www.reddit.com/r/hyperapp)
-
 ## License
 
-hyperapp-debug is MIT licensed. See [LICENSE.md](./LICENSE.md).
+Hyperapp Debug is MIT licensed. See [LICENSE.md](./LICENSE.md).
