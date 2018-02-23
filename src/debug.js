@@ -118,83 +118,94 @@ export const actions = {
   explorer: Explorer.actions,
 };
 
+const ticker = (state, actions) => (
+  h('div', {
+    class: 'ticker',
+  }, [
+    h('div', { class: 'text', style: { backgroundColor: '#c0392b' } }, [state.contractedCounter]),
+    h('div', {
+      class: 'button text',
+      style: {
+        backgroundColor: '#34495e',
+        cursor: 'pointer',
+      },
+      onclick: actions.toggleExpanded,
+    }, [
+      'Expand',
+    ])
+  ])
+);
+
+const expanded = (state, actions) => (
+  h('div', { class: 'full' }, [
+    h('header', {}, [
+      h('h1', {}, ['Hyperapp Debugger']),
+      h('div', {
+        class: 'button',
+        onclick: actions.toggleExpanded,
+      }, ['Hide']),
+    ]),
+
+    h('div', { class: 'controls' }, [
+      h('input', {
+        class: 'time-travel',
+        type: 'range',
+        disabled: state.states.length === 0,
+        min: 0,
+        max: state.states.length - 1,
+        step: 1,
+        value: state.stateIdx,
+        oninput: e => actions.timeTravelTo(Number(e.target.value)),
+      }),
+      h('div', { class: 'current-time' }, [state.stateIdx]),
+    ]),
+
+    h('div', { class: 'controls' }, [
+      state.isTimeTravelling && state.stateIdx !== (state.states.length - 1) &&
+        h('div', {
+          class: 'button detach',
+          onclick: actions.detachResume,
+          title: 'Resume interactivity, but from the current state',
+        }, ['Detach']),
+      h('div', {
+        key: 'playback',
+        class: ['button playback', state.isTimeTravelling ? 'resume' : 'pause'].join(' '),
+        onclick: () => (
+          state.isTimeTravelling
+            ? actions.resume()
+            : actions.timeTravelTo(state.states.length - 1)
+        ),
+        title: 'Toggle debug mode.',
+      }),
+    ]),
+
+    h('div', {
+      id: 'hyperapp-debugger-explorer',
+    }, [
+      state.states.length > 0 && Explorer.view(state.states[state.stateIdx], actions.explorer)
+    ]),
+
+    h('div', {
+      class: 'external',
+    }, [
+      h('a', { href: '#', onclick: actions.export }, ['Export']),
+      ' / ',
+      h('label', { for: 'hyperapp-debug-import' }, ['Import']),
+      h('input', {
+        id: 'hyperapp-debug-import',
+        style: { outline: 'none', width: 0, height: 0 },
+        type: 'file',
+        onchange: actions.import,
+      }),
+    ])
+  ])
+);
+
 export const view = (state, actions) => (
-  <div class={['container', state.expanded ? 'expanded' : ''].join(' ')}>
-
-    <div class="ticker">
-      <div class="text" style={{ backgroundColor: '#c0392b' }}>{state.contractedCounter}</div>
-      <div
-        class="button text"
-        style={{
-          backgroundColor: '#34495e',
-          cursor: 'pointer',
-        }}
-        onclick={actions.toggleExpanded}
-      >
-        Expand
-      </div>
-    </div>
-
-    <div class="full">
-      <header>
-        <h1>Hyperapp Debugger</h1>
-        <div class="button" onclick={actions.toggleExpanded}>Hide</div>
-      </header>
-      <div class="controls">
-        <input
-          class="time-travel"
-          type="range"
-          disabled={state.states.length === 0}
-          min={0}
-          max={state.states.length - 1}
-          step={1}
-          value={state.stateIdx}
-          oninput={e => {
-            actions.timeTravelTo(Number(e.target.value));
-          }}
-        />
-        <div class="current-time">{state.stateIdx}</div>
-      </div>
-      <div class="controls">
-        {state.isTimeTravelling && state.stateIdx !== (state.states.length - 1) &&
-          <div
-            class="button detach"
-            onclick={actions.detachResume}
-            title="Resume interactivity, but from the current state."
-          >
-            Detach
-          </div>
-        }
-        <div
-          key="playback"
-          class={['button', state.isTimeTravelling ? 'resume' : 'pause'].join(' ')}
-          onclick={() => (
-            state.isTimeTravelling
-              ? actions.resume()
-              : actions.timeTravelTo(state.states.length - 1)
-          )}
-          title="Toggle debug mode."
-        >
-          {state.isTimeTravelling ? 'Resume' : 'Pause'}
-        </div>
-      </div>
-      <div id="hyperapp-debugger-explorer">
-        {state.states.length > 0 && Explorer.view(state.states[state.stateIdx], actions.explorer)}
-      </div>
-      <div class="external">
-        <a href="#" onclick={actions.export}>Export</a>
-        &nbsp;/&nbsp;
-        <label for="hyperapp-debug-import">
-          Import
-        </label>
-        <input
-          id="hyperapp-debug-import"
-          style={{ outline: 'none', width: 0, height: 0 }}
-          type="file"
-          onchange={actions.import}
-        />
-
-      </div>
-    </div>
-  </div>
+  h('div', {
+    class: ['container', state.expanded ? 'expanded' : ''].join(' ')
+  }, [
+    ticker(state, actions),
+    expanded(state, actions),
+  ])
 );

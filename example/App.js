@@ -1,5 +1,5 @@
 import { h, app } from 'hyperapp';
-import debug from '../src/index.js';
+import { debug as withDebug } from '../src/index.js';
 
 export const initialState = {
   counter: 0,
@@ -14,13 +14,17 @@ export const actions = {
 };
 
 const view = (state, actions) => (
-  <div>
-    <h1>Counter: {state.counter}</h1>
-    <button onclick={actions.decrem}>Decrement</button>
-    <button onclick={actions.increm}>Increment</button>
-    <hr />
-    <textarea value={state.text} oninput={actions.setText} />
-  </div>
+  h('div', null, [
+    h('h1', null, `Counter: ${state.counter}`),
+    h('button', { onclick: actions.decrem }, 'Decrement'),
+    h('button', { onclick: actions.increm }, 'Increment'),
+    h('hr'),
+    h('textarea', {
+      value: state.text,
+      oninput: actions.setText,
+    })
+
+  ])
 );
 
-debug(app)(initialState, actions, view, document.body);
+withDebug(app)(initialState, actions, view, document.body);

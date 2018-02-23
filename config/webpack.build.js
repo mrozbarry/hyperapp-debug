@@ -8,7 +8,8 @@ module.exports = {
   output: {
     path: path.resolve(__dirname, '..'),
     filename: 'index.js',
-    library: 'hyperapp-debug',
+    library: 'withDebug',
+    libraryExport: 'debug',
     libraryTarget: 'umd',
     umdNamedDefine: true,
   },
