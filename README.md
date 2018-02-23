@@ -1,11 +1,10 @@
 # <img height=24 src=https://cdn.rawgit.com/JorgeBucaran/f53d2c00bafcf36e84ffd862f0dc2950/raw/882f20c970ff7d61aa04d44b92fc3530fa758bc0/Hyperapp.svg> Hyperapp Debug
 
-![](https://img.shields.io/npm/l/hyperapp-debug.svg)
 [![npm](https://img.shields.io/npm/v/hyperapp-debug.svg)](https://www.npmjs.com/package/hyperapp-debug)
 [![Travis CI](https://img.shields.io/travis/mrozbarry/hyperapp-debug.svg)](https://travis-ci.org/mrozbarry/hyperapp-debug)
 [![Slack](https://hyperappjs.herokuapp.com/badge.svg)](https://hyperappjs.herokuapp.com "Join us")
 
-A debugging high-order app for [Hyperapp](https://github.com/JorgeBucaran/hyperapp).
+A debugging high-order app for [Hyperapp](https://github.com/hyperapp/hyperapp).
 
 ## Installation
 
@@ -26,10 +25,10 @@ If you don't want to set up a build environment, you can download Hyperapp Debug
 
 ## Usage
 
-By wrapping hyperapp's `app`, the debug app gets mounted and wired into your app code.
+Use <samp>debug</samp> to wrap Hyperapp's <samp>app</samp> function.
 
 ```js
-import { app, h } from 'hyperapp';
+import { app } from 'hyperapp';
 import debug from 'hyperapp-debug';
 import { state, actions, view } from './your-app.js';
 
@@ -38,11 +37,11 @@ debug(app)(state, actions, view);
 
 ## History
 
-For those coming from the elm community, you may notice much inspiration from [elm's time-travelling debugger](http://debug.elm-lang.org/edit/Thwomp.elm).
+For those coming from the elm community, you may notice much inspiration from [Elm's time-travelling debugger](http://debug.elm-lang.org/edit/Thwomp.elm).
 
 ## Notes
 
- 1. As part of wrapping the app function, hyperapp-debug injects `$debugSetState` into your actions object to forcefully set the state of your app.
+ 1. As part of wrapping the app function, Hyperapp Debug injects `$debugSetState` into your actions object to forcefully set the state of your app.
  2. `debug(app)` should probably not be used in production, since it will allow users to inspect your state, it may expose information you don't want exposed.
 
 ## Examples
@@ -52,4 +51,4 @@ For those coming from the elm community, you may notice much inspiration from [e
 
 ## License
 
-Hyperapp Debug is MIT licensed. See [LICENSE.md](./LICENSE.md).
+Hyperapp Debug is MIT licensed. See [LICENSE.md](LICENSE.md).
