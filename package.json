@@ -1,11 +1,11 @@
 {
   "name": "hyperapp-debug",
-  "version": "0.0.1-beta.9",
+  "version": "0.0.1-beta.10",
   "main": "index.js",
   "browser": "index.js",
   "module": "src/index.js",
   "license": "MIT",
-  "repository": "github:mrozbarry/hyperapp-debug",
+  "repository": "github:HyperappCommunity/hyperapp-debug",
   "dependencies": {
     "hyperapp": "^1.1.2",
     "lodash.isplainobject": "^4.0.6"
