@@ -18,22 +18,20 @@ export const actions = {
 };
 
 export const view = (state, actions) => (
-  <ShowValue value={state} {...actions} />
+  h(ShowValue, { value: state, ...actions })
 );
 
 const ShowValue = ({ exposeVariable, name, value }) => {
   const makeAnchor = () => (
     typeof name !== undefined
-      ? <a
-          class="object-key"
-          href="#"
-          onclick={(e) => {
+      ? h('a', {
+          class: 'object-key',
+          href: '#',
+          onclick: (e) => {
             e.preventDefault();
             exposeVariable(value);
-          }}
-        >
-          {name}
-        </a>
+          },
+        }, [name])
       : null
   );
 
@@ -54,29 +52,30 @@ const ShowValue = ({ exposeVariable, name, value }) => {
 
   if (wrappers) {
     return (
-      <div>
-        {makeAnchor()} {wrappers[0]}
-        <div class="object">
-          {prependAll}
-          {keys.filter(k => !k.startsWith('$debug')).map((k, idx) => (
-            <ShowValue
-              key={idx}
-              exposeVariable={exposeVariable}
-              name={k}
-              value={value[k]}
-            />
-          ))}
-        </div>
-        {wrappers[1]}
-      </div>
+      h('div', {}, [
+        makeAnchor(),
+        ` ${wrappers[0]}`,
+        h('div', { class: 'object' }, [
+          prependAll,
+          keys.filter(k => !k.startsWith('$')).map((k) => (
+            h(ShowValue, {
+              key: k,
+              exposeVariable: exposeVariable,
+              name: k,
+              value: value[k],
+            })
+          )),
+        ]),
+        wrappers[1],
+      ])
     )
   }
 
   const v = JSON.stringify(value);
 
-  return (
-    <div>
-      {makeAnchor()} {v.slice(0, 15)}{v.length > 15 ? '...' : ''}
-    </div>
-  )
+  return h('div', {}, [
+    makeAnchor(),
+    v.length > 15 ? '...' : '',
+    v.slice(-15),
+  ]);
 }
