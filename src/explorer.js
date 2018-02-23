@@ -72,9 +72,11 @@ const ShowValue = ({ exposeVariable, name, value }) => {
     )
   }
 
+  const v = JSON.stringify(value);
+
   return (
     <div>
-      {makeAnchor()} {JSON.stringify(value)}
+      {makeAnchor()} {v.slice(0, 15)}{v.length > 15 ? '...' : ''}
     </div>
   )
 }
