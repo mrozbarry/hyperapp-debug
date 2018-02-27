@@ -7,7 +7,7 @@ module.exports = {
 
   output: {
     path: path.resolve(__dirname, '..'),
-    filename: 'index.js',
+    filename: 'bundle.js',
     library: 'withDebug',
     libraryExport: 'debug',
     libraryTarget: 'umd',
