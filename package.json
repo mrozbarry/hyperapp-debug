@@ -2,7 +2,7 @@
   "name": "hyperapp-debug",
   "version": "0.0.1-beta.10",
   "main": "index.js",
-  "browser": "index.js",
+  "browser": "bundle.js",
   "module": "src/index.js",
   "license": "MIT",
   "repository": "github:HyperappCommunity/hyperapp-debug",
@@ -13,7 +13,6 @@
   "devDependencies": {
     "@ava/babel-preset-stage-4": "^1.1.0",
     "@babel/core": "^7.0.0-beta.40",
-    "@babel/plugin-transform-react-jsx": "^7.0.0-beta.40",
     "@babel/preset-env": "^7.0.0-beta.40",
     "@babel/preset-stage-1": "^7.0.0-beta.40",
     "@babel/register": "^7.0.0-beta.40",
