@@ -25,7 +25,7 @@ module.exports = {
     hyperapp: 'hyperapp',
   },
 
-  plugins: [
-    new Uglify(),
-  ],
+  optimization: {
+    minimizer: [new Uglify()],
+  },
 }
