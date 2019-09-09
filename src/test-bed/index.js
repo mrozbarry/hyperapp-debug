@@ -1,4 +1,5 @@
 import { app, h } from 'hyperapp';
+import { interval } from '@hyperapp/time';
 import { Http, Interval } from 'hyperapp-fx';
 import { debug } from '../hoa/index.js';
 
@@ -8,9 +9,7 @@ const LOAD_STATUS = {
   error: 'error',
 };
 
-const loadable = (status, data) => [LOAD_STATUS.success, LOAD_STATUS.error].indexOf(status) >= 0 ? [status, data] : [status, null];
-const loadablePending = () => loadable(LOAD_STATUS.pending);
-const loadableSuccess = data => loadable(LOAD_STATUS.success, data);
+const loadable = (status, data) => [LOAD_STATUS.success, LOAD_STATUS.error].indexOf(status) >= 0 ? [status, data] : [status, null]; const loadablePending = () => loadable(LOAD_STATUS.pending); const loadableSuccess = data => loadable(LOAD_STATUS.success, data);
 const loadableError = err => loadable(LOAD_STATUS.error, err);
 const loadableGet = (loadableTuple, on = {}) => {
   const fn = on[loadableTuple[0]] || (() => null);
@@ -24,7 +23,7 @@ const Sub = state => ({ ...state, value: state.value - 1 });
 // Quotes
 const SetQuoteOK = (state, response) => ({
   ...state,
-  quote: loadableSuccess(response.content), 
+  quote: loadableSuccess(response.content),
 });
 const SetQuoteERR = (state, response) => ({
   ...state,
@@ -98,7 +97,14 @@ const kill = debug(app)({
 
   ]),
   subscriptions: state => [
-    state.runInterval && Interval({ every: 1000, action: IntervalTick })
+    state.runInterval && [
+      [
+        Interval({ every: 1000, action: IntervalTick }),
+        [
+          interval(IntervalTick, { delay: 10000 }),
+        ]
+      ]
+    ],
   ],
   node: document.getElementById('app'),
 });
