@@ -1,0 +1,9 @@
+{
+  "devtools_page": "index.html",
+  "manifest_version": 2,
+  "name": "Hyperapp Dev Tools",
+  "description": "Time-travel debugger for Hyperapp V2",
+  "permissions": [],
+  "author": "Alex Barry",
+  "version": "0.0.1-beta.0"
+}

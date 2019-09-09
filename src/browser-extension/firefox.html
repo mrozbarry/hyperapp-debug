@@ -1,0 +1,18 @@
+<body>
+  <script>
+    browser.devtools.panels
+      .create(
+        'Hyperapp Dev Tools',
+        'icons/ha.debug.png',
+        'panel.html',
+      )
+        .then((panel) => {
+          panel.onShown.addListener(() => {
+          });
+
+          panel.onHidden.addListener(() => {
+          });
+        });
+
+  </script>
+</body>
