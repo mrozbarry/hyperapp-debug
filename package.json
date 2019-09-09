@@ -16,13 +16,20 @@
     "ava": "^2.3.0",
     "hyperapp": "^2.0.1",
     "hyperapp-fx": "^2.0.0-beta.1",
+    "npm-run-all": "^4.1.5",
     "parcel": "^1.12.3"
   },
   "peerDependencies": {
     "hyperapp": "^2"
   },
   "scripts": {
-    "start": "parcel ./src/test-bed/index.html",
+    "start:testbed": "parcel ./src/test-bed/index.html",
+    "start:extension": "parcel ./src/browser-extension/panel.html",
+    "build:extension:firefox:bundle": "parcel build --no-cache -d ./extensions/firefox -o panel.html ./src/browser-extension/panel.html",
+    "build:extension:firefox:index": "cp ./src/browser-extension/firefox.html ./extensions/firefox/index.html",
+    "build:extension:firefox:icons": "cp -r ./src/browser-extension/icons ./extensions/firefox",
+    "build:extension:firefox:manifest": "cp ./src/browser-extension/manifest.firefox.json ./extensions/firefox/manifest.json",
+    "build:extension:firefox": "npm-run-all --serial \"build:extension:firefox:*\"",
     "test": "ava"
   },
   "ava": {
