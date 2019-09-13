@@ -1,0 +1,29 @@
+{
+  "manifest_version": 2,
+
+  "name": "Hyperapp Dev Tools",
+  "description": "Time-travel debugger for Hyperapp V2",
+  "author": "Alex Barry",
+  "version": "0.0.1",
+  "permissions": [
+    "activeTab",
+    "tabs",
+    "file:///*",
+    "http://*/*",
+    "https://*/*"
+  ],
+
+  "devtools_page": "index.html",
+
+  "content_scripts": [
+    {
+      "js": ["inject.js"],
+      "matches": ["<all_urls>"],
+      "run_at": "document_start"
+    }
+  ],
+
+  "background": {
+    "scripts": ["background.js"]
+  }
+}

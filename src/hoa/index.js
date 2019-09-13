@@ -1,5 +1,3 @@
-import './global';
-
 const isAction = (action) => typeof action === 'function';
 const isEffect = (action) => Array.isArray(action) && typeof action[0] === 'function';
 const isStateEffect = (action) => Array.isArray(action) && typeof action[0] !== 'function' && Array.isArray(action[1]);
@@ -18,10 +16,10 @@ const typeOfAction = (action) => {
 const makeActionEvent = (action, props) => ({ type: 'action', name: action.name, props });
 const makeEffectEvent = ([effect, props]) => ({ type: 'effect', name: effect.name, props });
 const makeCommitEvent = (state) => ({ type: 'commit', state });
-const makeSubStartEvent = ([effect, props]) => ({ type: 'subcription/start', name: effect.name, props });
+const makeSubStartEvent = ([effect, props]) => ({ type: 'subscription/start', name: effect.name, props });
 const makeSubStopEvent = ([effect, props]) => ({ type: 'subscription/stop', name: effect.name, props });
 
-const recordEvents = (action, props, on = {}) => {
+const recordEvents = (action, props) => {
   switch (typeOfAction(action)) {
     case 'action':
       return [
@@ -46,14 +44,14 @@ const recordEvents = (action, props, on = {}) => {
   }
 }
 
-export const middleware = (appStart, broadcastEvent) => dispatch => {
+export const middleware = (appStart, emitDebugMessage) => dispatch => {
   return (action, props) => {
     const happenedAt = Date.now() - appStart;
-    const domSource = props instanceof Event ? { domSource: props.target } : {} ;
-    const events = recordEvents(action, props).map(e => ({ ...e, happenedAt, ...domSource }));
-    for(const e of events) {
-      broadcastEvent(e);
-    }
+
+    recordEvents(action, props)
+      .map(e => ({ ...e, happenedAt }))
+      .forEach(e => emitDebugMessage('event', e));
+
     return dispatch(action, props);
   };
 };
@@ -115,10 +113,21 @@ const recordSubEvents = (prevSubs, subs) => {
 export const debug = app => (props) => {
   const appStart = Date.now();
 
-  const debugApp = window.__HYPERAPP_V2_DEBUG__.registerApp(props.node);
+
+  const emitDebugMessage = (type, message) => {
+    const event = new CustomEvent(
+      'HyperappV2DevToolMessage', {
+        detail: { type, payload: JSON.parse(JSON.stringify(message)) },
+      },
+    )
+    window.dispatchEvent(event);
+  };
+
+  window.addEventListener('beforeunload', () => {
+    emitDebugMessage('reset-events', {});
+  });
 
   const outerMiddleware = props.middleware || (dispatch => dispatch);
-  const outerSubscriptions = props.subscriptions || (state => []);
 
   let subscriptions = undefined;
   if (props.subscriptions) {
@@ -127,10 +136,9 @@ export const debug = app => (props) => {
       const happenedAt = Date.now() - appStart;
       const subs = props.subscriptions(state);
       const flattened = flattenSubs([...subs]);
-      const events = recordSubEvents(prevSubs, flattened).map(e => ({ ...e, happenedAt }));
-      for(const e of events) {
-        debugApp.broadcastEvent(e);
-      }
+      recordSubEvents(prevSubs, flattened)
+        .map(e => ({ ...e, happenedAt }))
+        .forEach(e => emitDebugMessage('event', e));
       prevSubs = flattened;
       return subs;
     };
@@ -140,6 +148,6 @@ export const debug = app => (props) => {
   return app({
     ...props,
     subscriptions,
-    middleware: dispatch => outerMiddleware(middleware(appStart, debugApp.broadcastEvent)(dispatch)),
+    middleware: dispatch => outerMiddleware(middleware(appStart, emitDebugMessage)(dispatch)),
   });
 };
