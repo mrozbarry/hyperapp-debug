@@ -1,3 +1,6 @@
+const APP_TO_DEVTOOL = '$hyperapp-app-to-devtool';
+const DEVTOOL_TO_APP = '$hyperapp-devtool-to-app';
+
 const isAction = (action) => typeof action === 'function';
 const isEffect = (action) => Array.isArray(action) && typeof action[0] === 'function';
 const isStateEffect = (action) => Array.isArray(action) && typeof action[0] !== 'function' && Array.isArray(action[1]);
@@ -116,8 +119,8 @@ export const debug = app => (props) => {
 
   const emitDebugMessage = (type, message) => {
     const event = new CustomEvent(
-      'HyperappV2DevToolMessage', {
-        detail: { type, payload: JSON.parse(JSON.stringify(message)) },
+      APP_TO_DEVTOOL, {
+        detail: { target: 'devtool', type, payload: JSON.parse(JSON.stringify(message)) },
       },
     )
     window.dispatchEvent(event);
