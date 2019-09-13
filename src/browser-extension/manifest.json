@@ -7,7 +7,6 @@
   "version": "0.0.1",
   "permissions": [
     "activeTab",
-    "tabs",
     "file:///*",
     "http://*/*",
     "https://*/*"

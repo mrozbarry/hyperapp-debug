@@ -1,17 +1,6 @@
 import { app, h } from './hyperapp.js';
-
-const context = typeof browser !== 'undefined' ? browser : chrome;
-console.log('panel.context', { context });
-
-const Init = () => [
-  {
-    events: [],
-  },
-  OutgoingMessageFx({}),
-];
-
-const EventsAdd = (state, message) => ({ ...state, events: state.events.concat(message) });
-const EventsClear = (state) => ({ ...state, events: [] });
+import * as actions from './actions.js';
+import * as effects from './effects/index.js';
 
 const basicEvent = (title, description) => h('section', { class: 'event' }, [
   h('strong', null, title),
@@ -28,38 +17,9 @@ const eventViews = {
 };
 const eventView = event => eventViews[event.type](event);
 
-const IncomingMessage = (dispatch, props) => {
-  const onMessage = (message) => {
-    console.log('Devtool:IncomingMessage#onMessage', message);
-    switch (message.type) {
-      case 'event':
-        return dispatch(props.onEvent, message.payload);
-
-      case 'reset-events':
-        return dispatch(props.onReset);
-    }
-  };
-
-  context.runtime.onMessage.addListener(onMessage);
-
-  return () => {
-    context.runtime.onMessage.removeListener(onMessage);
-  };
-};
-const IncomingMessageFx = props => [IncomingMessage, props];
-
-const OutgoingMessage = (_dispatch, props) => {
-  context.runtime.sendMessage({
-    type: 'devtool',
-    props,
-  });
-};
-
-const OutgoingMessageFx = props => [OutgoingMessage, props];
-
 document.addEventListener('DOMContentLoaded', () => {
   app({
-    init: Init,
+    init: actions.Init,
     view: state => h('body', null, [
       h('h1', null, 'Hyperapp Debug V2'),
       h('article', null, [
@@ -74,7 +34,11 @@ document.addEventListener('DOMContentLoaded', () => {
       ]),
     ]),
     subscriptions: () => [
-      IncomingMessageFx({ onEvent: EventsAdd , onReset: EventsClear }),
+      effects.handleMessages({
+        event: actions.EventsAdd,
+        'reset-events': actions.EventsClear,
+      }),
+      effects.relayMessages(),
     ],
     node: document.body,
   });
