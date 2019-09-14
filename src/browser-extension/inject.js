@@ -2,8 +2,8 @@ const APP_TO_DEVTOOL = '$hyperapp-app-to-devtool';
 const DEVTOOL_TO_APP = '$hyperapp-devtool-to-app';
 
 const connect = () => {
-  let port = chrome.runtime.connect({ name: 'hyperapp-debug-inject' });
-  console.log('inject', port);
+  let port = chrome.runtime.connect({ name: 'app' });
+  console.log('[inject]', 'connected', port);
 
   const relayEventsToDevtool = (e) => {
     console.log('[inject]', 'relayEventsToDevtool', e.detail);
@@ -17,7 +17,6 @@ const connect = () => {
   }
 
   const reconnect = () => {
-    console.log('lost connection, attempting reconnect in 1s');
     port = null;
     setTimeout(connect, 1000);
   };
@@ -25,7 +24,8 @@ const connect = () => {
   window.addEventListener(APP_TO_DEVTOOL, relayEventsToDevtool, false);
   port.onMessage.addListener(relayEventsToApp);
 
-  port.onDisconnect.addListener(() => {
+  port.onDisconnect.addListener((event) => {
+    console.log('[inject]', 'onDisconnect', event);
     window.removeEventListener(APP_TO_DEVTOOL, relayEventsToDevtool, false);
     reconnect();
   });

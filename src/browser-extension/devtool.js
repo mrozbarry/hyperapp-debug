@@ -4,12 +4,33 @@ chrome.devtools.panels
     '/icons/hyperapp.jpg',
     '/panel/index.html',
     (panel) => {
-      console.log('panel created', panel);
+      console.log('[panel]', 'created', panel);
+
+      const port = chrome.runtime.connect({ name: 'panel' });
 
       panel.onShown.addListener(() => {
+        console.log('[devtool]', '------ panel shown ------');
+        try {
+          port.postMessage({
+            target: 'app',
+            type: 'message',
+            payload: {
+              action: 'fire-messages',
+            },
+          });
+        } catch (err) {
+        }
       });
 
       panel.onHidden.addListener(() => {
+        console.log('[devtool]', '------ panel hidden ------');
+        port.postMessage({
+          target: 'app',
+          type: 'message',
+          payload: {
+            action: 'queue-messages',
+          },
+        });
       });
     }
   );

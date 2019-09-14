@@ -1,30 +1,28 @@
+let ports = {};
 chrome.runtime.onConnect.addListener((port) => {
-  console.log('[background]', 'onConnect', port);
+  ports[port.name] = port;
+  console.log('[background]', 'onConnect', port, { ports });
 
-  const sendMessage = (port, message, attempts = 5) => {
-    if (attempts === 0) {
-      throw new Error('Unable to send message after 5 tries');
+  const sendMessage = (message) => {
+    const retry = () => {
+      setTimeout(() => {
+        sendMessage(message);
+      }, 500);
     }
-    switch (message.target) {
-      case 'app':
-        try {
-          return port.postMessage(message);
-        } catch (err) {
-          console.warn('unable to send message, trying again');
-          setTimeout(() => {
-            sendMessage(port, message, attempts - 1);
-          }, 500);
-        }
-
-      case 'devtool':
-        return chrome.runtime.sendMessage(message, (response) => {
-          console.log('[background]', 'sendMessage.response', response);
-        });
+    const port = ports[message.target];
+    if (!port) {
+      return retry();
     }
+    port.postMessage(message);
   }
 
   port.onMessage.addListener(async (message) => {
     console.log('[background]', 'onMessage', port.name, message);
-    sendMessage(port, message)
+    sendMessage(message)
+  });
+
+  port.onDisconnect.addListener(() => {
+    console.log('[background]', 'onDisconnect', port.name);
+    ports[port.name] = null;
   });
 });

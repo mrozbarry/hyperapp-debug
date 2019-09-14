@@ -115,9 +115,21 @@ const recordSubEvents = (prevSubs, subs) => {
 
 export const debug = app => (props) => {
   const appStart = Date.now();
+  // let isConnectedToDebugger = false;
 
+  let pendingAction = null;
 
   const emitDebugMessage = (type, message) => {
+    if (type === 'event' && message.type === 'action') {
+      pendingAction = { type, message };
+      return;
+    } else if (type === 'event' && message.type === 'commit') {
+      message = {
+        ...pendingAction.message,
+        state: message.state,
+      };
+      pendingAction = null;
+    }
     const event = new CustomEvent(
       APP_TO_DEVTOOL, {
         detail: { target: 'devtool', type, payload: JSON.parse(JSON.stringify(message)) },
@@ -126,8 +138,15 @@ export const debug = app => (props) => {
     window.dispatchEvent(event);
   };
 
+  const onDevtoolMessage = (event) => {
+    const message = event.detail;
+    console.log('[FROM DEV TOOL]', message);
+  };
+
+  window.addEventListener(DEVTOOL_TO_APP, onDevtoolMessage);
+
   window.addEventListener('beforeunload', () => {
-    emitDebugMessage('reset-events', {});
+    emitDebugMessage('message', { action: 'page-unload' });
   });
 
   const outerMiddleware = props.middleware || (dispatch => dispatch);
@@ -148,9 +167,14 @@ export const debug = app => (props) => {
   }
 
 
-  return app({
+  const kill = app({
     ...props,
     subscriptions,
     middleware: dispatch => outerMiddleware(middleware(appStart, emitDebugMessage)(dispatch)),
   });
+
+  return () => {
+    window.removeEventListener(DEVTOOL_TO_APP, onDevtoolMessage);
+    kill();
+  };
 };
