@@ -1,5 +1,4 @@
 import { app, h } from 'hyperapp';
-import { interval } from '@hyperapp/time';
 import { Http, Interval } from 'hyperapp-fx';
 import { debug } from '../hoa/index.js';
 
@@ -100,9 +99,6 @@ const kill = debug(app)({
     state.runInterval && [
       [
         Interval({ every: 1000, action: IntervalTick }),
-        [
-          interval(IntervalTick, { delay: 10000 }),
-        ]
       ]
     ],
   ],
