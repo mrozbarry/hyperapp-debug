@@ -2,7 +2,7 @@ import { app, h } from './hyperapp.js';
 import * as actions from './actions.js';
 import * as effects from './effects/index.js';
 
-const basicEvent = (type, name) => h('div', { style: { border: '1px #efefef solid', marginRight: '0.5rem', padding: '0.1rem' } }, [
+const basicEvent = (type, name) => h('div', { class: 'event' }, [
   h('span', null, name),
 ]);
 
@@ -29,41 +29,66 @@ const orderedGroup = ({ groupedEvents }) => {
   }))
 };
 
+const uniqueSubs = ({ events }) => {
+  const allSubs = events.filter(e => e.type === 'subscription/start').map(e => e.name);
+  console.log('uniqueSubs', allSubs);
+  return Array.from(new Set(allSubs));
+};
+
+const streamBase = ({ events, type, render, onEventClick  }) => h('section', {
+  class: 'stream',
+  style: {
+    gridTemplateColumns: 'repeat(${Math.min(events.length, 100)}, 130px)',
+  },
+}, events.map((event, index) => h('button', {
+    disabled: !!!onEventClick,
+    onclick: onEventClick && onEventClick(event, index + 1),
+    class: 'stream-item',
+    style: {
+      gridColumnStart: index + 1,
+    },
+  }, event[type] && render(event[type]))),
+);
+
+const stream = ({ events, type }) => streamBase({ events, type, render: eventView });
+
+const subStreamRender = subName => event => event.name === subName && eventView(event);
+const streamSub = ({ events, subName }) => streamBase({
+  events,
+  type: 'subscription',
+  render: subStreamRender(subName),
+});
+
+const onActionClickMake = (event, index) => {
+  return function onActionClick(state, props) {
+    console.log('action clicked', { event, index, props });
+    return state;
+  };
+};
+
 document.addEventListener('DOMContentLoaded', () => {
   app({
     init: actions.Init,
     view: state => {
       const events = orderedGroup(state);
+      const subs = uniqueSubs(state);
 
       return h('body', null, [
         h('h1', null, 'Hyperapp Debug V2'),
         h('article', null, [
           h('section', null, [
             h('h2', null, 'Events'),
-            h('article', { style: {
-              display: 'grid',
-              gridTemplateColumns: 'repeat(200px, ${events.length + 1})',
-              gridTemplateRows: `50px 50px 50px`,
-              overflow: 'auto',
-              width: 'auto',
-              maxWidth: '100vw',
-            } }, [
-              ...events.reduce((all, event, column) => {
-                return [
-                  ...all,
-                  ...[event.action, event.effect, event.subscription].map((e, row) => e && h('div', {
-                    style: {
-                      gridColumnStart: column + 2,
-                      gridRowStart: row + 1,
-                      width: '200px',
-                    },
-                  }, eventView(e)))
-                ];
-              }, []),
-              h('strong', { style: { gridColumnStart: 1, gridRowStart: 1 } }, 'Actions'),
-              h('strong', { style: { gridColumnStart: 1, gridRowStart: 2 } }, 'Effects'),
-              h('strong', { style: { gridColumnStart: 1, gridRowStart: 3 } }, 'Subscriptions'),
-            ])
+            h('div', { class: 'stream-container' },
+              stream({
+                events,
+                type: 'action',
+                onEventClick
+              })
+            ),
+            h('div', { class: 'stream-container' }, stream({ events, type: 'effect' })),
+            ...subs.map(subName => h('div', { class: 'stream-container' },
+              streamSub({ events, subName }),
+            )),
           ]),
         ]),
       ]);

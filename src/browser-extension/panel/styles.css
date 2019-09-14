@@ -1,0 +1,51 @@
+html,
+body {
+  font-size: 14px;
+  font-family: sans-serif;
+  padding: 0;
+  margin: 0;
+}
+
+body * {
+  box-sizing: border-box;
+}
+
+.stream-container {
+  display: inline-block;
+  border-top: 1px darkblue solid;
+  border-bottom: 1px darkblue solid;
+  background-color: lightblue;
+  height: 32px;
+  margin: 0;
+  padding: 0;
+  min-width: 100%;
+}
+
+.stream {
+  display: inline-grid;
+  height: 100%;
+  overflow: visible;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+}
+
+.stream-item {
+  width: 130px;
+  overflow: hidden;
+  grid-row-start: 1;
+  height: 100%;
+  background: none;
+  border-radius: 0;
+  border: none;
+  margin: 0;
+  padding: 0;
+}
+
+.event {
+  padding: 0.2rem;
+  border-left: 1px rgba(255, 255, 255, 0.7) solid;
+  text-overflow: ellipsis;
+  background-color: rgba(0, 0, 0, 0.1);
+  height: 100%;
+}
