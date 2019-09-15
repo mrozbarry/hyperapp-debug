@@ -2,22 +2,8 @@ import { app, h } from './hyperapp.js';
 import * as actions from './actions.js';
 import * as effects from './effects/index.js';
 
-const basicEvent = (type, name) => h('div', { class: 'event' }, [
-  h('span', null, name),
-]);
-
-const eventWithType = event => basicEvent(event.type, event.name);
-const eventViews = {
-  action: eventWithType,
-  effect: eventWithType,
-  'subscription/start': eventWithType,
-  'subscription/stop': eventWithType,
-};
-const eventView = event => eventViews[event.type](event);
-
-const eventList = ({ title, events }) => h('section', {}, [
-  h('strong', null, title),
-  h('div', { style: { display: 'flex', flexDirection: 'row' } }, events.map(eventView)),
+const basicEvent = (event) => event && h('div', { class: 'event' }, [
+  h('span', null, event.name),
 ]);
 
 const orderedGroup = ({ groupedEvents }) => {
@@ -31,14 +17,13 @@ const orderedGroup = ({ groupedEvents }) => {
 
 const uniqueSubs = ({ events }) => {
   const allSubs = events.filter(e => e.type === 'subscription/start').map(e => e.name);
-  console.log('uniqueSubs', allSubs);
   return Array.from(new Set(allSubs));
 };
 
 const streamBase = ({ events, type, render, onEventClick  }) => h('section', {
   class: 'stream',
   style: {
-    gridTemplateColumns: 'repeat(${Math.min(events.length, 100)}, 130px)',
+    gridTemplateColumns: 'repeat(${events.length}, 130px)',
   },
 }, events.map((event, index) => h('button', {
     disabled: !!!onEventClick,
@@ -47,12 +32,13 @@ const streamBase = ({ events, type, render, onEventClick  }) => h('section', {
     style: {
       gridColumnStart: index + 1,
     },
-  }, event[type] && render(event[type]))),
+  }, render(event[type]))),
 );
 
-const stream = ({ events, type }) => streamBase({ events, type, render: eventView });
+const stream = ({ events, type }) => streamBase({ events, type, render: basicEvent });
 
-const subStreamRender = subName => event => event.name === subName && eventView(event);
+const subStreamRender = subName => event => event.name === subName && basicEvent(event);
+
 const streamSub = ({ events, subName }) => streamBase({
   events,
   type: 'subscription',
@@ -73,30 +59,63 @@ document.addEventListener('DOMContentLoaded', () => {
       const events = orderedGroup(state);
       const subs = uniqueSubs(state);
 
+      const iter = Array.from({ length: state.eventIndex + 1 });
+
       return h('body', null, [
         h('h1', null, 'Hyperapp Debug V2'),
         h('article', null, [
           h('section', null, [
             h('h2', null, 'Events'),
-            h('div', { class: 'stream-container' },
-              stream({
-                events,
-                type: 'action',
-                onEventClick
-              })
+              h('div', { class: 'stream-container' },
+                h('section', {
+                  class: 'stream',
+                  style: {
+                    gridTemplateColumns: 'repeat(${events.length}, 130px)',
+                    gridTemplateRows: 'repeat(2, 32px)',
+                  },
+                },
+                iter.reduce((elements, _, index) => {
+                  const action = state.streams.action[index];
+                  const effect = state.streams.effect[index];
+                  return [
+                    ...elements,
+                    action && h('div', {
+                      class: 'stream-item',
+                      style: {
+                        gridColumnStart: index + 1,
+                        gridRowStart: 1,
+                      },
+                    }, basicEvent(action)),
+                    effect && h('div', {
+                      class: 'stream-item',
+                      style: {
+                        gridColumnStart: index + 1,
+                        gridRowStart: 2,
+                      },
+                    }, basicEvent(effect)),
+                  ]
+                }, []),
+              )
+              // stream({
+              //   events,
+              //   type: 'action',
+              //   onEventClick: onActionClickMake
+              // })
             ),
-            h('div', { class: 'stream-container' }, stream({ events, type: 'effect' })),
-            ...subs.map(subName => h('div', { class: 'stream-container' },
-              streamSub({ events, subName }),
-            )),
+            // h('div', { class: 'stream-container' }, stream({ events, type: 'effect' })),
+            // ...subs.map(subName => h('div', { class: 'stream-container' },
+            //   streamSub({ events, subName }),
+            // )),
           ]),
         ]),
       ]);
     },
     subscriptions: () => [
       effects.handleMessages({
-        event: actions.EventsAdd,
-        'message:page-unload': actions.EventsClear,
+        'events': actions.EventsAdd,
+        // 'event:action': actions.EventsAddActionOrEffect,
+        // 'event:effect': actions.EventsAddActionOrEffect,
+        // 'message:page-unload': actions.EventsClear,
       }),
     ],
     node: document.body,

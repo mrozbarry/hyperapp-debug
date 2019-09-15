@@ -6,12 +6,12 @@ const connect = () => {
   console.log('[inject]', 'connected', port);
 
   const relayEventsToDevtool = (e) => {
-    console.log('[inject]', 'relayEventsToDevtool', e.detail);
+    // console.log('[inject]', 'relayEventsToDevtool', e.detail);
     port.postMessage(e.detail);
   }
 
   const relayEventsToApp = (message) => {
-    console.log('[inject]', 'relayEventsToApp', message);
+    // console.log('[inject]', 'relayEventsToApp', message);
     const event = new CustomEvent(DEVTOOL_TO_APP, { detail: message });
     window.dispatchEvent(event);
   }

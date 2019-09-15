@@ -10,16 +10,13 @@ chrome.devtools.panels
 
       panel.onShown.addListener(() => {
         console.log('[devtool]', '------ panel shown ------');
-        try {
-          port.postMessage({
-            target: 'app',
-            type: 'message',
-            payload: {
-              action: 'fire-messages',
-            },
-          });
-        } catch (err) {
-        }
+        port.postMessage({
+          target: 'app',
+          type: 'message',
+          payload: {
+            action: 'fire-messages',
+          },
+        });
       });
 
       panel.onHidden.addListener(() => {

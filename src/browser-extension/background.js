@@ -1,4 +1,5 @@
-let ports = {};
+const ports = {};
+
 chrome.runtime.onConnect.addListener((port) => {
   ports[port.name] = port;
   console.log('[background]', 'onConnect', port, { ports });
