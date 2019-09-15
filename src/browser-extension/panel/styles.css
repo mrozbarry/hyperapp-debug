@@ -10,6 +10,25 @@ body * {
   box-sizing: border-box;
 }
 
+.layout {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  justify-content: flex-start;
+  width: 100vw;
+}
+
+.layout-events {
+  flex: 1;
+  max-width: calc(100vw - 400px);
+  overflow: auto;
+}
+
+.layout-inspector {
+  flex: 0;
+  width: 400px;
+}
+
 .stream-container {
   display: inline-block;
   border-top: 1px darkblue solid;
@@ -17,7 +36,7 @@ body * {
   background-color: lightblue;
   margin: 0;
   padding: 0;
-  min-width: 100%;
+  overflow: auto;
 }
 
 .stream {
@@ -27,6 +46,7 @@ body * {
   min-width: 0;
   margin: 0;
   padding: 0;
+  grid-gap: 1px;
 }
 
 .stream-item {
@@ -39,11 +59,16 @@ body * {
   border: none;
   margin: 0;
   padding: 0;
+  text-align: left;
+}
+
+.stream-item--active {
+  outline: 1px yellow solid;
 }
 
 .event {
   padding: 0.2rem;
-  border-left: 1px rgba(255, 255, 255, 0.7) solid;
+  /* border-left: 1px rgba(255, 255, 255, 0.7) solid; */
   text-overflow: ellipsis;
   background-color: rgba(0, 0, 0, 0.1);
   height: 100%;

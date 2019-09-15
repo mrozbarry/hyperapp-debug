@@ -5,18 +5,19 @@ export const Init = () => ({
   groupedEvents: {},
   streams: {
     action: [],
+    commit: [],
     effect: [],
     subscription: {},
   },
+  inspectedEventIndex: 0,
   eventIndex: 0,
 });
 
-export const EventsAdd = (state, eventCollection) => {
-  const { eventIndex } = state;
-
-  const nextStreams = eventCollection.reduce((streams, event) => {
+export const EventsAdd = (state, { eventIndex, eventBatch }) => {
+  const nextStreams = eventBatch.reduce((streams, event) => {
     switch (event.type) {
       case 'action':
+      case 'commit':
       case 'effect': {
         const stream = [...streams[event.type]];
         stream[eventIndex] = {
@@ -46,7 +47,7 @@ export const EventsAdd = (state, eventCollection) => {
         };
       }
 
-      case 'subscription/end': {
+      case 'subscription/stop': {
         const stream = [...(streams.subscription[event.name] || [])];
         stream[eventIndex] = {
           ...event,
@@ -68,15 +69,31 @@ export const EventsAdd = (state, eventCollection) => {
     }
   }, { ...state.streams });
 
-  return {
-    ...state,
+  const inspectedEventIndex = (eventIndex !== state.eventIndex)
+    ? eventIndex
+    : state.inspectedEventIndex;
 
-    events: state.events.concat(eventCollection),
+  return [
+    {
+      ...state,
 
-    streams: nextStreams,
+      events: state.events.concat(eventBatch),
 
-    eventIndex: eventIndex + 1,
-  }
+      eventIndex,
+      inspectedEventIndex,
+
+      streams: nextStreams,
+    },
+    effects.scrollEventsTo(inspectedEventIndex),
+  ]
 };
 
-export const EventsClear = Init;
+export const decodeActionClick = event => Number(event.currentTarget.getAttribute('data-eventindex'));
+
+export const InspectEventIndex = (state, inspectedEventIndex) => {
+  console.log('InspectEventIndex', { state, inspectedEventIndex });
+  return {
+    ...state,
+    inspectedEventIndex,
+  };
+}

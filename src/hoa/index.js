@@ -1,16 +1,14 @@
-import { recordSubEvents, flattenSubs } from './helpers/subscription';
+import { recordSubEvents } from './helpers/subscription';
+import { flattenEffects } from './helpers/flattenEffects';
 import { makeEvents } from './helpers/events';
 
 const APP_TO_DEVTOOL = '$hyperapp-app-to-devtool';
 const DEVTOOL_TO_APP = '$hyperapp-devtool-to-app';
 
 
-export const middleware = (appStart, emitDebugMessage) => dispatch => {
+export const middleware = (emitDebugMessage) => dispatch => {
   return (action, props) => {
-    const happenedAt = Date.now() - appStart;
-
     const events = makeEvents(action, props)
-      .map(e => ({ ...e, happenedAt }))
 
     emitDebugMessage('events', events);
 
@@ -22,31 +20,32 @@ const isEventsWithAction = (type, message) => type === 'events' && message.some(
 const isEventsWithCommit = (type, message) => type === 'events' && message.some(m => m.type === 'commit');
 
 export const debug = app => (props) => {
-  const appStart = Date.now();
+  let eventIndex = 0;
 
-  let pendingAction = null;
-
-  const emitDebugMessage = (type, message) => {
-    if (isEventsWithAction(type, message)) {
-      pendingAction = message.find(m => m.type === 'action');
-      message = message.filter(m => m.type !== 'action');
-      return;
-    } else if (isEventsWithCommit(type, message)) {
-      message = message.map((event) => {
-        if (event.type !== 'commit') {
-          return event;
-        }
-        return { ...pendingAction, state: event.state };
-      });
-      pendingAction = null;
+  let eventsBuffer = [];
+  const queueEvents = (type, message) => {
+    if (type !== 'events') {
+      return emitDebugMessage(type, message);
     }
 
+    eventsBuffer = eventsBuffer.concat(message);
+  };
+
+  const flushEvents = () => {
+    emitDebugMessage('events', eventsBuffer);
+    eventsBuffer = [];
+  };
+
+  const emitDebugMessage = (type, message) => {
     const event = new CustomEvent(
       APP_TO_DEVTOOL, {
-        detail: { target: 'devtool', type, payload: JSON.parse(JSON.stringify(message)) },
+        detail: { target: 'devtool', type, eventIndex, payload: JSON.parse(JSON.stringify(message)) },
       },
     )
     window.dispatchEvent(event);
+    if (type === 'events') {
+      eventIndex += 1;
+    }
   };
 
   const onDevtoolMessage = (event) => {
@@ -62,27 +61,25 @@ export const debug = app => (props) => {
 
   const outerMiddleware = props.middleware || (dispatch => dispatch);
 
-  let subscriptions = undefined;
-  if (props.subscriptions) {
-    let prevSubs = [];
-    subscriptions = state => {
-      const happenedAt = Date.now() - appStart;
+  let prevSubs = [];
+  const subscriptions = state => {
+    const subs = props.subscriptions
+      ? props.subscriptions(state)
+      : [];
 
-      const subs = props.subscriptions(state);
-      const flattened = flattenSubs([...subs]);
-      const events = recordSubEvents(prevSubs, flattened)
-        .map(e => ({ ...e, happenedAt }))
-      emitDebugMessage('events', events)
-      prevSubs = flattened;
-      
-      return subs;
-    };
-  }
+    const flattened = flattenEffects([...subs]);
+    const events = recordSubEvents(prevSubs, flattened)
+    queueEvents('events', events)
+    flushEvents();
+    prevSubs = flattened;
+
+    return subs;
+  };
 
   const kill = app({
     ...props,
     subscriptions,
-    middleware: dispatch => outerMiddleware(middleware(appStart, emitDebugMessage)(dispatch)),
+    middleware: dispatch => outerMiddleware(middleware(queueEvents)(dispatch)),
   });
 
   return () => {
