@@ -6,13 +6,13 @@ const ScrollEventsTo = (_dispatch, { eventIndex }) => {
     if (!target) {
       return;
     }
-    console.log('scrolling', target, target.scrollWidth);
+    const left = (eventIndex * 138);
     target.scrollTo({
-      left: target.scrollWidth,
+      left, // : target.scrollWidth,
       top: 0,
       behavior: 'smooth',
     });
-  }, 100);
+  }, 50);
 }
 
 export const scrollEventsTo = props => [ScrollEventsTo, props];

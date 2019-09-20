@@ -2,7 +2,6 @@ import * as effects from './effects/index.js';
 
 export const Init = () => ({
   events: [],
-  groupedEvents: {},
   streams: {
     action: [],
     commit: [],
@@ -11,9 +10,11 @@ export const Init = () => ({
   },
   inspectedEventIndex: 0,
   eventIndex: 0,
+  isPaused: false,
 });
 
 export const EventsAdd = (state, { eventIndex, eventBatch }) => {
+  console.log('actions.EventsAdd', { eventIndex, eventBatch });
   const nextStreams = eventBatch.reduce((streams, event) => {
     switch (event.type) {
       case 'action':
@@ -69,7 +70,7 @@ export const EventsAdd = (state, { eventIndex, eventBatch }) => {
     }
   }, { ...state.streams });
 
-  const inspectedEventIndex = (eventIndex !== state.eventIndex)
+  const inspectedEventIndex = eventIndex
     ? eventIndex
     : state.inspectedEventIndex;
 
@@ -83,17 +84,45 @@ export const EventsAdd = (state, { eventIndex, eventBatch }) => {
       inspectedEventIndex,
 
       streams: nextStreams,
+
+      isPaused: false,
     },
-    effects.scrollEventsTo(inspectedEventIndex),
+    effects.scrollEventsTo({ eventIndex: inspectedEventIndex }),
   ]
 };
 
-export const decodeActionClick = event => Number(event.currentTarget.getAttribute('data-eventindex'));
-
 export const InspectEventIndex = (state, inspectedEventIndex) => {
   console.log('InspectEventIndex', { state, inspectedEventIndex });
-  return {
-    ...state,
-    inspectedEventIndex,
-  };
-}
+  return [
+    {
+      ...state,
+      inspectedEventIndex,
+      isPaused: true,
+    },
+    [
+      effects.scrollEventsTo({ eventIndex: inspectedEventIndex }),
+      effects.outgoingMessage({
+        type: 'set-state',
+        payload: {
+          inspectedEventIndex,
+          actions: state.streams.action,
+          state: (state.streams.commit[inspectedEventIndex] || { state: 'undefined' }).state,
+        }
+      }),
+    ],
+  ];
+};
+
+export const UnpauseApp = (state) => {
+  return [
+    {
+      ...state,
+      inspectedEventIndex: state.eventIndex,
+      isPaused: false,
+    },
+    effects.outgoingMessage({
+      type: 'unfreeze',
+      payload: {},
+    }),
+  ];
+};

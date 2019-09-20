@@ -1,65 +1,122 @@
 import { recordSubEvents } from './helpers/subscription';
 import { flattenEffects } from './helpers/flattenEffects';
 import { makeEvents } from './helpers/events';
+import * as eventBuffer from './helpers/eventBuffer';
+import { raw } from './effects/messageDevTool';
+import { h } from 'hyperapp';
 
 const APP_TO_DEVTOOL = '$hyperapp-app-to-devtool';
+const APP_TO_PANEL = '$hyperapp-app-to-panel';
 const DEVTOOL_TO_APP = '$hyperapp-devtool-to-app';
 
+const devtoolStyles = `
+.hyperapp-devtools-container {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  background-color: red;
+  color: white;
+  font-size: 12px;
+  font-family: sans-serif;
+  padding: 2px;
+}
 
-export const middleware = (emitDebugMessage) => dispatch => {
-  return (action, props) => {
-    const events = makeEvents(action, props)
+.hyperapp-devtools-container:hover {
+  opacity: 0.1;
+}
+`;
 
-    emitDebugMessage('events', events);
-
-    return dispatch(action, props);
-  };
+const injectStylesheet = () => {
+  const prev = document.head.querySelector('style#hyperapp-dev-tools');
+  if (prev) return;
+  const styleTag = document.createElement('style');
+  styleTag.type = 'text/css';
+  styleTag.id = 'hyperapp-dev-tools';
+  styleTag.innerText = devtoolStyles;
+  document.head.appendChild(styleTag);
 };
 
-const isEventsWithAction = (type, message) => type === 'events' && message.some(m => m.type === 'action');
-const isEventsWithCommit = (type, message) => type === 'events' && message.some(m => m.type === 'commit');
+const showPaused = () => {
+  const container = document.createElement('div');
+  container.className = 'hyperapp-devtools-container';
+  container.innerHTML = `❚❚ App Paused`;
+  document.body.appendChild(container);
+  return container;
+};
 
 export const debug = app => (props) => {
+  injectStylesheet();
+
   let eventIndex = 0;
+  let pausedDiv = null;
+  let freeze = false;
 
-  let eventsBuffer = [];
-  const queueEvents = (type, message) => {
-    if (type !== 'events') {
-      return emitDebugMessage(type, message);
-    }
-
-    eventsBuffer = eventsBuffer.concat(message);
-  };
-
-  const flushEvents = () => {
-    emitDebugMessage('events', eventsBuffer);
-    eventsBuffer = [];
-  };
+  (void eventBuffer.flush());
 
   const emitDebugMessage = (type, message) => {
-    const event = new CustomEvent(
-      APP_TO_DEVTOOL, {
-        detail: { target: 'devtool', type, eventIndex, payload: JSON.parse(JSON.stringify(message)) },
-      },
-    )
-    window.dispatchEvent(event);
-    if (type === 'events') {
-      eventIndex += 1;
+    if (freeze) {
+      return;
     }
+    raw(APP_TO_DEVTOOL, type, eventIndex, message);
   };
 
-  const onDevtoolMessage = (event) => {
-    const message = event.detail;
-    console.log('[FROM DEV TOOL]', message);
+  raw(APP_TO_PANEL, 'use-hyperapp-devtool', eventIndex, {});
+  emitDebugMessage(APP_TO_DEVTOOL, 'init', eventIndex, {});
+
+  class NoFreeze {
+    constructor(message) {
+      this.message = message;
+    }
+  }
+  const avoidFreeze = message => new NoFreeze(message);
+  const avoidsFreeze = message => message instanceof NoFreeze;
+
+  const middleware = dispatch => {
+    return (action, props) => {
+      if (avoidsFreeze(action)) {
+        return dispatch(action.message, props);
+      } else if (!freeze) {
+        eventBuffer.push(makeEvents(action, props));
+
+        return dispatch(action, props);
+      }
+    };
   };
 
-  window.addEventListener(DEVTOOL_TO_APP, onDevtoolMessage);
+  const devToolMessageHandlers = {
+    'set-state': (dispatch, message) => {
+      dispatch(avoidFreeze(message.payload.state));
+      if (!freeze) {
+        freeze = true;
+        pausedDiv = showPaused();
+      }
 
-  window.addEventListener('beforeunload', () => {
-    emitDebugMessage('message', { action: 'page-unload' });
-  });
+    },
+    'unfreeze': (_dispatch, _message) => {
+      freeze = false;
+      pausedDiv.remove();
+      pausedDiv = null;
+    },
+  };
 
-  const outerMiddleware = props.middleware || (dispatch => dispatch);
+  const DevToolSub = (dispatch, props) => {
+    const onDevtoolMessage = (event) => {
+      const message = event.detail;
+      const handler = devToolMessageHandlers[message.type];
+      if (!handler) {
+        return console.log('[FROM DEV TOOL]', message);
+      }
+      handler(dispatch, message);
+    };
+
+    window.addEventListener(props.eventName, onDevtoolMessage);
+
+    return () => {
+      window.removeEventListener(props.eventName, onDevtoolMessage);
+    };
+  };
+
+  const devToolSub = (props = {}) => [DevToolSub, props];
 
   let prevSubs = [];
   const subscriptions = state => {
@@ -68,22 +125,25 @@ export const debug = app => (props) => {
       : [];
 
     const flattened = flattenEffects([...subs]);
-    const events = recordSubEvents(prevSubs, flattened)
-    queueEvents('events', events)
-    flushEvents();
+    if (!freeze) {
+      eventBuffer.push(recordSubEvents(prevSubs, flattened))
+      emitDebugMessage('events', eventBuffer.flush());
+      eventIndex += 1;
+    }
     prevSubs = flattened;
 
-    return subs;
+    return subs.concat([
+      devToolSub({ eventName: DEVTOOL_TO_APP }),
+    ]);
   };
 
   const kill = app({
     ...props,
     subscriptions,
-    middleware: dispatch => outerMiddleware(middleware(queueEvents)(dispatch)),
+    middleware,
   });
 
   return () => {
-    window.removeEventListener(DEVTOOL_TO_APP, onDevtoolMessage);
     kill();
   };
 };

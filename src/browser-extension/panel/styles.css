@@ -29,6 +29,11 @@ body * {
   width: 400px;
 }
 
+.layout-inspector pre {
+  text-overflow: none;
+  overflow: auto;
+}
+
 .stream-container {
   display: inline-block;
   border-top: 1px darkblue solid;
@@ -37,7 +42,17 @@ body * {
   margin: 0;
   padding: 0;
   overflow: auto;
+  position: relative;
 }
+
+/* .stream-cursor { */
+/*   position: absolute; */
+/*   top: 0; */
+/*   bottom: 0; */
+/*   width: auto; */
+/*   border-left: 4px white solid; */
+/*   left: 0; */
+/* } */
 
 .stream {
   display: inline-grid;
@@ -45,8 +60,8 @@ body * {
   overflow: visible;
   min-width: 0;
   margin: 0;
-  padding: 0;
-  grid-gap: 1px;
+  padding: 8px;
+  grid-gap: 8px;
 }
 
 .stream-item {
@@ -60,10 +75,12 @@ body * {
   margin: 0;
   padding: 0;
   text-align: left;
+  font-size: 100%;
+  font-weight: normal;
 }
 
 .stream-item--active {
-  outline: 1px yellow solid;
+  outline: 3px white solid;
 }
 
 .event {

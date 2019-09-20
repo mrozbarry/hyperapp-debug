@@ -1,33 +1,35 @@
-chrome.devtools.panels
-  .create(
-    'Hyperapp Dev Tools',
-    '/icons/hyperapp.jpg',
-    '/panel/index.html',
-    (panel) => {
-      console.log('[panel]', 'created', panel);
+let port = null;
+let devPanel = null;
+const connect = () => {
+  port = chrome.runtime.connect({ name: 'panel' });
+  console.log('panel devtool', port);
 
-      const port = chrome.runtime.connect({ name: 'panel' });
+  port.onMessage.addListener((e) => {
+    console.log('--> panel', e);
 
-      panel.onShown.addListener(() => {
-        console.log('[devtool]', '------ panel shown ------');
-        port.postMessage({
-          target: 'app',
-          type: 'message',
-          payload: {
-            action: 'fire-messages',
+    if (!devPanel) {
+      chrome.devtools.panels
+        .create(
+          'Hyperapp Dev Tools',
+          '/icons/hyperapp.jpg',
+          '/panel/index.html',
+          (panel) => {
+            devPanel = panel;
+            port.postMessage({
+              target: 'app',
+              type: 'devtools-active',
+              payload: {},
+            });
           },
-        });
-      });
-
-      panel.onHidden.addListener(() => {
-        console.log('[devtool]', '------ panel hidden ------');
-        port.postMessage({
-          target: 'app',
-          type: 'message',
-          payload: {
-            action: 'queue-messages',
-          },
-        });
-      });
+        );
     }
-  );
+  });
+
+  port.onDisconnect.addListener(() => {
+    port = null;
+    setTimeout(connect, 100);
+  });
+};
+
+connect();
+

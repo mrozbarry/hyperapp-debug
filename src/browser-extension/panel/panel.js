@@ -1,6 +1,7 @@
 import { app, h } from './hyperapp.js';
 import * as actions from './actions.js';
 import * as effects from './effects/index.js';
+import { quickControls } from './components/quickControls.js';
 
 const basicEvent = (event) => event && h('div', { class: 'event' }, [
   h('span', null, event.name),
@@ -12,7 +13,16 @@ document.addEventListener('DOMContentLoaded', () => {
     view: state => {
       const subs = Object.keys(state.streams.subscription);
 
-      const iter = Array.from({ length: state.eventIndex + 1 });
+      const streamArray = name => state.streams[name] || [];
+
+      const eventIndex = Math.max(
+        streamArray('actions').length,
+        streamArray('commit').length,
+        streamArray('effects').length,
+        ...Object.values(state.streams.subscription).map(s => s.length),
+      ) - 1;
+
+      const iter = Array.from({ length: eventIndex + 1 });
 
       const commit = state.streams.commit[state.inspectedEventIndex]
       const inspectedState = commit
@@ -20,14 +30,12 @@ document.addEventListener('DOMContentLoaded', () => {
         : {};
 
       return h('body', null, [
-        h('h1', null, 'Hyperapp Debug V2'),
         h('article', null, [
-          h('button', null, 'Rewind'),
-          h('button', null, 'Step Back'),
-          h('button', null, 'Play'),
-          h('button', null, 'Pause'),
-          h('button', null, 'Step Forward'),
-          h('button', null, 'Fast-Forward'),
+          ...quickControls({
+            inspectedEventIndex: state.inspectedEventIndex,
+            eventIndex,
+            isPaused: state.isPaused,
+          }),
         ]),
         h('article', { class: 'layout' }, [
           h('section', { class: 'layout-events' }, [
@@ -49,8 +57,7 @@ document.addEventListener('DOMContentLoaded', () => {
                   return [
                     ...elements,
                     action && h('button', {
-                      onclick: [actions.InspectEventIndex, actions.decodeActionClick],
-                      'data-eventindex': index,
+                      onclick: [actions.InspectEventIndex, index],
                       class: {
                         'stream-item': true,
                         'stream-item--active': index === state.inspectedEventIndex,
@@ -78,11 +85,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     )),
                   ];
                 }, []),
-              )
+              ),
+              // h('div', { class: 'stream-cursor' }),
             ),
           ]),
           h('section', { class: 'layout-inspector' }, [
-            h('h2', null, 'Inspector'),
+            h('h2', null, 'Inspector', state.inspectedEventIndex),
             h('code', null, [
               h('pre', null, JSON.stringify(inspectedState, null, 2)),
             ])
@@ -93,9 +101,7 @@ document.addEventListener('DOMContentLoaded', () => {
     subscriptions: () => [
       effects.handleMessages({
         'events': actions.EventsAdd,
-        // 'event:action': actions.EventsAddActionOrEffect,
-        // 'event:effect': actions.EventsAddActionOrEffect,
-        'message:page-unload': actions.Init,
+        'init': actions.Init,
       }),
     ],
     node: document.body,
