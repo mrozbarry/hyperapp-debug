@@ -1,8 +1,13 @@
 let port = null;
 let devPanel = null;
 const connect = () => {
+  try {
   port = chrome.runtime.connect({ name: 'panel' });
   console.log('panel devtool', port);
+  } catch (err) {
+    console.warn(err);
+    setTimeout(connect, 100);
+  }
 
   port.onMessage.addListener((e) => {
     console.log('--> panel', e);

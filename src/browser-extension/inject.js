@@ -2,10 +2,20 @@ const APP_TO_DEVTOOL = '$hyperapp-app-to-devtool';
 const APP_TO_PANEL = '$hyperapp-app-to-panel';
 const DEVTOOL_TO_APP = '$hyperapp-devtool-to-app';
 
-const log = (...args) => console.log('[inject]', ...args);
+const log = (...args) => void args; // console.log('[inject]', ...args);
 
+let port = null;
 const connect = () => {
-  let port = chrome.runtime.connect({ name: 'app' });
+  const reconnect = () => {
+    port = null;
+    setTimeout(connect, 1000);
+  };
+
+  try {
+    port = chrome.runtime.connect({ name: 'app' });
+  } catch (err) {
+    reconnect();
+  }
 
   const postMessage = (message) => {
     log('postMessage', message);
@@ -13,29 +23,25 @@ const connect = () => {
   };
 
   const relayEventsToDevtool = (e) => {
-    log('relayEventsToDevtool', e);
+    // log('relayEventsToDevtool', e);
     postMessage({
       target: 'devtool',
       ...e.detail,
     });
-  }
+  };
 
   const relayEventsToPanel = (e) => {
-    log('relayEventsToPanel', e);
+    // log('relayEventsToPanel', e);
     postMessage({
       target: 'panel',
       ...e.detail,
     });
-  }
+  };
 
   const relayEventsToApp = (message) => {
+    log('relayToApp', message);
     const event = new CustomEvent(DEVTOOL_TO_APP, { detail: message });
     window.dispatchEvent(event);
-  }
-
-  const reconnect = () => {
-    port = null;
-    setTimeout(connect, 1000);
   };
 
   window.addEventListener(APP_TO_DEVTOOL, relayEventsToDevtool, false);
@@ -43,6 +49,7 @@ const connect = () => {
   port.onMessage.addListener(relayEventsToApp);
 
   port.onDisconnect.addListener((event) => {
+    port = null;
     console.log('[inject]', 'onDisconnect', event);
     window.removeEventListener(APP_TO_DEVTOOL, relayEventsToDevtool);
     window.removeEventListener(APP_TO_PANEL, relayEventsToPanel);

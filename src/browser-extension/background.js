@@ -1,8 +1,9 @@
+const log = (...args) => console.log('[background]', ...args);
 const ports = {};
 
 chrome.runtime.onConnect.addListener((port) => {
   ports[port.name] = port;
-  console.log('[background]', 'onConnect', port, { ports });
+  log('onConnect', port, { ports });
 
   const sendMessage = (message) => {
     const retry = () => {
@@ -18,12 +19,12 @@ chrome.runtime.onConnect.addListener((port) => {
   }
 
   port.onMessage.addListener(async (message) => {
-    console.log('[background]', 'onMessage', port.name, message);
+    log('onMessage', port.name, message);
     sendMessage(message)
   });
 
   port.onDisconnect.addListener(() => {
-    console.log('[background]', 'onDisconnect', port.name);
+    log('onDisconnect', port.name);
     ports[port.name] = null;
   });
 });

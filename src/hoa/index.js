@@ -1,112 +1,95 @@
 import { recordSubEvents } from './helpers/subscription';
 import { flattenEffects } from './helpers/flattenEffects';
-import { makeEvents } from './helpers/events';
-import * as eventBuffer from './helpers/eventBuffer';
 import { raw } from './effects/messageDevTool';
-import { h } from 'hyperapp';
+import * as dispatchHelper from './helpers/dispatch';
 
 const APP_TO_DEVTOOL = '$hyperapp-app-to-devtool';
 const APP_TO_PANEL = '$hyperapp-app-to-panel';
 const DEVTOOL_TO_APP = '$hyperapp-devtool-to-app';
 
-const devtoolStyles = `
-.hyperapp-devtools-container {
-  position: absolute;
-  top: 2px;
-  right: 2px;
-  background-color: red;
-  color: white;
-  font-size: 12px;
-  font-family: sans-serif;
-  padding: 2px;
-}
-
-.hyperapp-devtools-container:hover {
-  opacity: 0.1;
-}
-`;
-
-const injectStylesheet = () => {
-  const prev = document.head.querySelector('style#hyperapp-dev-tools');
-  if (prev) return;
-  const styleTag = document.createElement('style');
-  styleTag.type = 'text/css';
-  styleTag.id = 'hyperapp-dev-tools';
-  styleTag.innerText = devtoolStyles;
-  document.head.appendChild(styleTag);
-};
-
-const showPaused = () => {
-  const container = document.createElement('div');
-  container.className = 'hyperapp-devtools-container';
-  container.innerHTML = `❚❚ App Paused`;
-  document.body.appendChild(container);
-  return container;
-};
+// const devtoolStyles = `
+// .hyperapp-devtools-container {
+//   position: absolute;
+//   bottom: 2px;
+//   right: 2px;
+//   background-color: red;
+//   color: white;
+//   font-size: 12px;
+//   font-family: sans-serif;
+//   padding: 2px;
+// }
+//
+// .hyperapp-devtools-container:hover {
+//   opacity: 0.1;
+// }
+// `;
+//
+// const injectStylesheet = () => {
+//   const prev = document.head.querySelector('style#hyperapp-dev-tools');
+//   if (prev) return;
+//   const styleTag = document.createElement('style');
+//   styleTag.type = 'text/css';
+//   styleTag.id = 'hyperapp-dev-tools';
+//   styleTag.innerText = devtoolStyles;
+//   document.head.appendChild(styleTag);
+// };
+//
+// const showMessage = (html) => {
+//   const container = document.createElement('div');
+//   container.className = 'hyperapp-devtools-container';
+//   container.innerHTML = html;
+//   document.body.appendChild(container);
+//   return container;
+// }
+//
+// const showPaused = () => {
+//   return showMessage(`❚❚ App Paused`);
+// };
 
 export const debug = app => (props) => {
-  injectStylesheet();
+  // injectStylesheet();
+  let dispatch = null;
 
-  let eventIndex = 0;
-  let pausedDiv = null;
-  let freeze = false;
-
-  (void eventBuffer.flush());
-
-  const emitDebugMessage = (type, message) => {
-    if (freeze) {
-      return;
-    }
-    raw(APP_TO_DEVTOOL, type, eventIndex, message);
+  const emitDevtoolMessage = (type, message = {}) => {
+    raw(APP_TO_DEVTOOL, type, message);
   };
 
-  raw(APP_TO_PANEL, 'use-hyperapp-devtool', eventIndex, {});
-  emitDebugMessage(APP_TO_DEVTOOL, 'init', eventIndex, {});
+  const emitPanelMessage = (type, message = {}) => {
+    raw(APP_TO_PANEL, type, message);
+  };
 
-  class NoFreeze {
-    constructor(message) {
-      this.message = message;
-    }
-  }
-  const avoidFreeze = message => new NoFreeze(message);
-  const avoidsFreeze = message => message instanceof NoFreeze;
+  emitPanelMessage('use-hyperapp-devtool');
+  emitDevtoolMessage('init');
 
-  const middleware = dispatch => {
-    return (action, props) => {
-      if (avoidsFreeze(action)) {
-        return dispatch(action.message, props);
-      } else if (!freeze) {
-        eventBuffer.push(makeEvents(action, props));
+  const middleware = originalDispatch => {
+    dispatch = originalDispatch
 
-        return dispatch(action, props);
+    return (action, props, source) => {
+      if (!source) {
+        const serialized = dispatchHelper.serialize(action, props);
+        return emitDevtoolMessage('dispatch', serialized);
       }
+      return dispatch(action, props, source);
+      // const deserialized = dispatchHelper.deserialize(serialized);
+      // dispatch(deserialized.action, deserialized.props);
+      // return originalDispatch(Noop, {});
     };
   };
 
-  const devToolMessageHandlers = {
-    'set-state': (dispatch, message) => {
-      dispatch(avoidFreeze(message.payload.state));
-      if (!freeze) {
-        freeze = true;
-        pausedDiv = showPaused();
-      }
-
-    },
-    'unfreeze': (_dispatch, _message) => {
-      freeze = false;
-      pausedDiv.remove();
-      pausedDiv = null;
-    },
-  };
-
-  const DevToolSub = (dispatch, props) => {
+  const DevToolSub = (_dispatch, props) => {
     const onDevtoolMessage = (event) => {
       const message = event.detail;
-      const handler = devToolMessageHandlers[message.type];
-      if (!handler) {
-        return console.log('[FROM DEV TOOL]', message);
+      console.log('[DevToolSub]', message.type, message.payload);
+      switch (message.type) {
+        case 'dispatch': {
+          const deserialized = dispatchHelper.deserialize(message.payload);
+          return dispatch(deserialized.action, deserialized.props, 'devtool');
+        }
+
+        default:
+          console.log('Unabled devtool message', message);
+          return;
       }
-      handler(dispatch, message);
     };
 
     window.addEventListener(props.eventName, onDevtoolMessage);
@@ -125,11 +108,8 @@ export const debug = app => (props) => {
       : [];
 
     const flattened = flattenEffects([...subs]);
-    if (!freeze) {
-      eventBuffer.push(recordSubEvents(prevSubs, flattened))
-      emitDebugMessage('events', eventBuffer.flush());
-      eventIndex += 1;
-    }
+    // const subEvents = recordSubEvents(prevSubs, flattened)
+    // emitDevtoolMessage('sub:events', subEvents);
     prevSubs = flattened;
 
     return subs.concat([

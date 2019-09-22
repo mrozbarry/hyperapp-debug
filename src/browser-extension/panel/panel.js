@@ -11,6 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
   app({
     init: actions.Init,
     view: state => {
+      console.log('devtool state', state);
       const subs = Object.keys(state.streams.subscription);
 
       const streamArray = name => state.streams[name] || [];
@@ -100,8 +101,9 @@ document.addEventListener('DOMContentLoaded', () => {
     },
     subscriptions: () => [
       effects.handleMessages({
-        'events': actions.EventsAdd,
-        'init': actions.Init,
+        // 'events': actions.EventsAdd,
+        'dispatch': actions.ProcessDispatch,
+        // 'init': actions.Init,
       }),
     ],
     node: document.body,

@@ -13,6 +13,17 @@ export const Init = () => ({
   isPaused: false,
 });
 
+export const ProcessDispatch = (state, props) => {
+  console.log('--> ProcessDispatch', props);
+  return [
+    state,
+    effects.outgoingMessage({
+      type: 'dispatch',
+      payload: props,
+    }),
+  ];
+};
+
 export const EventsAdd = (state, { eventIndex, eventBatch }) => {
   console.log('actions.EventsAdd', { eventIndex, eventBatch });
   const nextStreams = eventBatch.reduce((streams, event) => {
