@@ -1,5 +1,4 @@
 export const raw = (eventName, type, payload) => {
-  console.log('messageDevTool.raw', { eventName, type, payload });
   const event = new CustomEvent(eventName, {
     detail: {
       type,

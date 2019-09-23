@@ -1,10 +1,13 @@
-const log = (...args) => console.log('[devtool]', ...args);
+import * as logger from '../helpers/logger.js';
+
+const log = logger.make('[devtool]');
 
 const HandleMessages = (dispatch, types) => {
   const port = chrome.runtime.connect({ name: 'devtool' });
   log('HandleMessages.sub', port);
 
   const onMessage = (message) => {
+    log('onMessage', message);
     const keys = [
       message.type,
       `${message.type}:${message.payload.action}`,
@@ -12,8 +15,6 @@ const HandleMessages = (dispatch, types) => {
 
     const actionKey = keys.find(k => types[k]);
     let action = types[actionKey];
-
-    log('HandleMessages', 'onMessage', message);
 
     if (action) {
       return dispatch(action, message.payload);

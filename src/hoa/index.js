@@ -3,52 +3,18 @@ import { flattenEffects } from './helpers/flattenEffects';
 import { raw } from './effects/messageDevTool';
 import * as dispatchHelper from './helpers/dispatch';
 
-const APP_TO_DEVTOOL = '$hyperapp-app-to-devtool';
-const APP_TO_PANEL = '$hyperapp-app-to-panel';
-const DEVTOOL_TO_APP = '$hyperapp-devtool-to-app';
-
-// const devtoolStyles = `
-// .hyperapp-devtools-container {
-//   position: absolute;
-//   bottom: 2px;
-//   right: 2px;
-//   background-color: red;
-//   color: white;
-//   font-size: 12px;
-//   font-family: sans-serif;
-//   padding: 2px;
-// }
-//
-// .hyperapp-devtools-container:hover {
-//   opacity: 0.1;
-// }
-// `;
-//
-// const injectStylesheet = () => {
-//   const prev = document.head.querySelector('style#hyperapp-dev-tools');
-//   if (prev) return;
-//   const styleTag = document.createElement('style');
-//   styleTag.type = 'text/css';
-//   styleTag.id = 'hyperapp-dev-tools';
-//   styleTag.innerText = devtoolStyles;
-//   document.head.appendChild(styleTag);
-// };
-//
-// const showMessage = (html) => {
-//   const container = document.createElement('div');
-//   container.className = 'hyperapp-devtools-container';
-//   container.innerHTML = html;
-//   document.body.appendChild(container);
-//   return container;
-// }
-//
-// const showPaused = () => {
-//   return showMessage(`❚❚ App Paused`);
-// };
-
 export const debug = app => (props) => {
-  // injectStylesheet();
   let dispatch = null;
+  const devToolsConfig = typeof window.hyperappDevTool === 'function' && JSON.parse(window.hyperappDevTool());
+  if (!devToolsConfig) {
+    console.warn(`It looks like you haven't install the Hyperapp Devtools Extension/Addon, but are using the debug app wrapper.
+For now, you'll be using the regular app function. Once you install the extension, you'll get access to the time travel debugger.
+
+You can get the latest versions from https://github.com/LearnHyperapp/hyperapp-devtools/releases
+`);
+    return app(props);
+  }
+  const { APP_TO_DEVTOOL, APP_TO_PANEL, DEVTOOL_TO_APP } = devToolsConfig.events;
 
   const emitDevtoolMessage = (type, message = {}) => {
     raw(APP_TO_DEVTOOL, type, message);
@@ -62,44 +28,35 @@ export const debug = app => (props) => {
   emitDevtoolMessage('init');
 
   const middleware = originalDispatch => {
-    dispatch = originalDispatch
+    dispatch = originalDispatch;
 
-    return (action, props, source) => {
-      if (!source) {
-        const serialized = dispatchHelper.serialize(action, props);
-        return emitDevtoolMessage('dispatch', serialized);
-      }
-      return dispatch(action, props, source);
-      // const deserialized = dispatchHelper.deserialize(serialized);
-      // dispatch(deserialized.action, deserialized.props);
-      // return originalDispatch(Noop, {});
+    return (action, props) => {
+      const serialized = dispatchHelper.serialize(action, props);
+      return emitDevtoolMessage('dispatch', serialized);
     };
   };
 
-  const DevToolSub = (_dispatch, props) => {
+  const DevToolSub = () => {
     const onDevtoolMessage = (event) => {
-      const message = event.detail;
-      console.log('[DevToolSub]', message.type, message.payload);
+      const message = JSON.parse(event.detail);
       switch (message.type) {
-        case 'dispatch': {
-          const deserialized = dispatchHelper.deserialize(message.payload);
-          return dispatch(deserialized.action, deserialized.props, 'devtool');
-        }
+      case 'dispatch': {
+        const deserialized = dispatchHelper.deserialize(message.payload);
+        return dispatch(deserialized.action, deserialized.props);
+      }
 
-        default:
-          console.log('Unabled devtool message', message);
-          return;
+      default:
+        console.log('Unable to process devtool message', message);
+        return;
       }
     };
 
-    window.addEventListener(props.eventName, onDevtoolMessage);
+    window.addEventListener(DEVTOOL_TO_APP, onDevtoolMessage, false);
 
     return () => {
-      window.removeEventListener(props.eventName, onDevtoolMessage);
+      window.removeEventListener(DEVTOOL_TO_APP, onDevtoolMessage);
     };
   };
-
-  const devToolSub = (props = {}) => [DevToolSub, props];
 
   let prevSubs = [];
   const subscriptions = state => {
@@ -108,22 +65,23 @@ export const debug = app => (props) => {
       : [];
 
     const flattened = flattenEffects([...subs]);
-    // const subEvents = recordSubEvents(prevSubs, flattened)
-    // emitDevtoolMessage('sub:events', subEvents);
+    const subEvents = recordSubEvents(prevSubs, flattened); // eslint-disable-line no-unused-vars
+    emitDevtoolMessage('subscriptions', subEvents);
     prevSubs = flattened;
 
-    return subs.concat([
-      devToolSub({ eventName: DEVTOOL_TO_APP }),
-    ]);
+    return subs;
   };
 
-  const kill = app({
+  const cancelDevToolSub = DevToolSub();
+
+  const appSignature = {
     ...props,
     subscriptions,
     middleware,
-  });
+  };
 
+  app(appSignature);
   return () => {
-    kill();
+    cancelDevToolSub();
   };
 };

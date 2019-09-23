@@ -1,7 +1,7 @@
 const functionMap = {};
 const functionMapAdd = (parent, fn) => {
   if (!fn.name) {
-    console.warn(`Encountered an illegal anonymous method used as an action or effect`);
+    console.warn('Encountered an illegal anonymous method used as an action or effect');
     return;
   }
   const key = `${parent}.${fn.name}`;
@@ -16,12 +16,12 @@ const functionMapAdd = (parent, fn) => {
 const functionMapGet = (parent, { name }) => {
   const key = `${parent}.${name}`;
   return functionMap[key];
-}
+};
 
 const fnToObject = (key, value) => {
   if (typeof value === 'function') {
     const serialized = { type: 'function', name: value.name };
-    console.log('serializing a function as', serialized);
+    // console.log('serializing a function as', serialized);
     functionMapAdd(key, value);
     return serialized;
   }
@@ -33,7 +33,7 @@ const objectToFn = (key, value) => {
     return functionMapGet(key, value);
   }
   return value;
-}
+};
 
 const serializeObject = object => {
   if (!object) {

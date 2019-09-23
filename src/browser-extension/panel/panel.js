@@ -2,9 +2,10 @@ import { app, h } from './hyperapp.js';
 import * as actions from './actions.js';
 import * as effects from './effects/index.js';
 import { quickControls } from './components/quickControls.js';
+import currentEventIndex from './helpers/currentEventIndex.js';
 
 const basicEvent = (event) => event && h('div', { class: 'event' }, [
-  h('span', null, event.name),
+  h('span', null, event.action.name),
 ]);
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -14,16 +15,12 @@ document.addEventListener('DOMContentLoaded', () => {
       console.log('devtool state', state);
       const subs = Object.keys(state.streams.subscription);
 
-      const streamArray = name => state.streams[name] || [];
+      const eventLength = currentEventIndex(state);
 
-      const eventIndex = Math.max(
-        streamArray('actions').length,
-        streamArray('commit').length,
-        streamArray('effects').length,
-        ...Object.values(state.streams.subscription).map(s => s.length),
-      ) - 1;
+      const iter = Array.from({ length: eventLength + 1 });
 
-      const iter = Array.from({ length: eventIndex + 1 });
+      const eventIndex = state.inspectedEventIndex || eventLength;
+      console.log('eventIndex', { state, eventLength });
 
       const commit = state.streams.commit[state.inspectedEventIndex]
       const inspectedState = commit
@@ -103,7 +100,8 @@ document.addEventListener('DOMContentLoaded', () => {
       effects.handleMessages({
         // 'events': actions.EventsAdd,
         'dispatch': actions.ProcessDispatch,
-        // 'init': actions.Init,
+        'subscriptions': actions.CommitDispatch,
+        'init': actions.Init,
       }),
     ],
     node: document.body,

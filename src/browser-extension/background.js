@@ -10,17 +10,17 @@ chrome.runtime.onConnect.addListener((port) => {
       setTimeout(() => {
         sendMessage(message);
       }, 500);
-    }
+    };
     const port = ports[message.target];
     if (!port) {
       return retry();
     }
     port.postMessage(message);
-  }
+  };
 
   port.onMessage.addListener(async (message) => {
     log('onMessage', port.name, message);
-    sendMessage(message)
+    sendMessage(message);
   });
 
   port.onDisconnect.addListener(() => {

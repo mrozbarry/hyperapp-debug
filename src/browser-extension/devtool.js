@@ -1,16 +1,22 @@
+import * as logger from './panel/helpers/logger.js';
+
+const log = logger.make('[panel]');
+
 let port = null;
 let devPanel = null;
 const connect = () => {
   try {
-  port = chrome.runtime.connect({ name: 'panel' });
-  console.log('panel devtool', port);
+    port = chrome.runtime.connect({ name: 'panel' });
+    log('connected', port);
   } catch (err) {
-    console.warn(err);
+    log.warn(err);
     setTimeout(connect, 100);
   }
 
   port.onMessage.addListener((e) => {
-    console.log('--> panel', e);
+    if (e.type !== 'use-hyperapp-devtool') {
+      return;
+    }
 
     if (!devPanel) {
       chrome.devtools.panels

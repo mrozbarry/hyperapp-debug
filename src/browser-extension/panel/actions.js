@@ -1,22 +1,28 @@
 import * as effects from './effects/index.js';
+import * as streamHelpers from './helpers/stream.js';
+// TODO: replace eventIndex state with computed helper, currentEventIndex
+import currentEventIndex from './helpers/currentEventIndex.js';
 
 export const Init = () => ({
-  events: [],
+  queue: [],
   streams: {
     action: [],
     commit: [],
     effect: [],
     subscription: {},
   },
-  inspectedEventIndex: 0,
+  inspectedEventIndex: null,
   eventIndex: 0,
   isPaused: false,
 });
 
 export const ProcessDispatch = (state, props) => {
-  console.log('--> ProcessDispatch', props);
+  const type = streamHelpers.typeOfAction(props);
   return [
-    state,
+    {
+      ...state,
+      queue: state.queue.concat({ ...props, '.type': type }),
+    },
     effects.outgoingMessage({
       type: 'dispatch',
       payload: props,
@@ -24,60 +30,81 @@ export const ProcessDispatch = (state, props) => {
   ];
 };
 
+const injectIntoArray = (arr, index, data) => {
+  arr[index] = data;
+  return arr;
+};
+
+export const CommitDispatch = (state, props) => {
+  const items = streamHelpers.splitQueue(state.queue);
+  const eventIndex = currentEventIndex(state) + 1;
+  console.log('CommitDispatch', { state, items, props });
+
+  return {
+    ...state,
+    queue: [],
+    streams: {
+      ...state.streams,
+      action: injectIntoArray(state.streams.action, eventIndex, items.action), 
+      commit: injectIntoArray(state.streams.commit, eventIndex, items.commit), 
+      effect: injectIntoArray(state.streams.effect, eventIndex, items.effect), 
+    },
+  };
+};
+
 export const EventsAdd = (state, { eventIndex, eventBatch }) => {
-  console.log('actions.EventsAdd', { eventIndex, eventBatch });
   const nextStreams = eventBatch.reduce((streams, event) => {
     switch (event.type) {
-      case 'action':
-      case 'commit':
-      case 'effect': {
-        const stream = [...streams[event.type]];
-        stream[eventIndex] = {
-          ...event,
-          duration: 1,
-        };
+    case 'action':
+    case 'commit':
+    case 'effect': {
+      const stream = [...streams[event.type]];
+      stream[eventIndex] = {
+        ...event,
+        duration: 1,
+      };
 
-        return {
-          ...streams,
-          [event.type]: stream,
-        };
-      }
+      return {
+        ...streams,
+        [event.type]: stream,
+      };
+    }
 
-      case 'subscription/start': {
-        const stream = [...(streams.subscription[event.name] || [])];
-        stream[eventIndex] = {
-          ...event,
-          duration: 1,
-        };
+    case 'subscription/start': {
+      const stream = [...(streams.subscription[event.name] || [])];
+      stream[eventIndex] = {
+        ...event,
+        duration: 1,
+      };
 
-        return {
-          ...streams,
-          subscription: {
-            ...streams.subscription,
-            [event.name]: stream,
-          }
-        };
-      }
+      return {
+        ...streams,
+        subscription: {
+          ...streams.subscription,
+          [event.name]: stream,
+        }
+      };
+    }
 
-      case 'subscription/stop': {
-        const stream = [...(streams.subscription[event.name] || [])];
-        stream[eventIndex] = {
-          ...event,
-          duration: 1,
-        };
+    case 'subscription/stop': {
+      const stream = [...(streams.subscription[event.name] || [])];
+      stream[eventIndex] = {
+        ...event,
+        duration: 1,
+      };
 
-        return {
-          ...streams,
-          subscription: {
-            ...streams.subscription,
-            [event.name]: stream,
-          }
-        };
-      }
+      return {
+        ...streams,
+        subscription: {
+          ...streams.subscription,
+          [event.name]: stream,
+        }
+      };
+    }
 
-      default:
-        console.log('OH NO!', 'EventsAdd', event.type);
-        return streams;
+    default:
+      console.log('OH NO!', 'EventsAdd', event.type);
+      return streams;
     }
   }, { ...state.streams });
 
@@ -99,7 +126,7 @@ export const EventsAdd = (state, { eventIndex, eventBatch }) => {
       isPaused: false,
     },
     effects.scrollEventsTo({ eventIndex: inspectedEventIndex }),
-  ]
+  ];
 };
 
 export const InspectEventIndex = (state, inspectedEventIndex) => {
