@@ -16,12 +16,23 @@ export const Init = () => ({
   isPaused: false,
 });
 
+const decode = (data) => {
+  console.log('decode', { data });
+  if (!event) return [];
+  const type = streamHelpers.typeOfAction(data);
+  switch (type) {
+  case 'action': return [{ label: data.action.name, timeSlices: 1 }];
+  case 'effect': return [{ label: data.action[0].name, timeSlices: 1 }];
+  case 'subscription/start': return [{ data: event.action[0].name, timeSlices: 1 }];
+  default: return [];
+  }
+};
+
 export const ProcessDispatch = (state, props) => {
-  const type = streamHelpers.typeOfAction(props);
   return [
     {
       ...state,
-      queue: state.queue.concat({ ...props, '.type': type }),
+      queue: state.queue.concat(decode(props)),
     },
     effects.outgoingMessage({
       type: 'dispatch',
@@ -45,9 +56,9 @@ export const CommitDispatch = (state, props) => {
     queue: [],
     streams: {
       ...state.streams,
-      action: injectIntoArray(state.streams.action, eventIndex, items.action), 
-      commit: injectIntoArray(state.streams.commit, eventIndex, items.commit), 
-      effect: injectIntoArray(state.streams.effect, eventIndex, items.effect), 
+      action: injectIntoArray(state.streams.action, eventIndex, items.action),
+      commit: injectIntoArray(state.streams.commit, eventIndex, items.commit),
+      effect: injectIntoArray(state.streams.effect, eventIndex, items.effect),
     },
   };
 };

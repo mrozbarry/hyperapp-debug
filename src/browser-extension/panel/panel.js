@@ -5,7 +5,7 @@ import { quickControls } from './components/quickControls.js';
 import currentEventIndex from './helpers/currentEventIndex.js';
 
 const basicEvent = (event) => event && h('div', { class: 'event' }, [
-  h('span', null, event.action.name),
+  h('span', null, event.label),
 ]);
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -20,7 +20,6 @@ document.addEventListener('DOMContentLoaded', () => {
       const iter = Array.from({ length: eventLength + 1 });
 
       const eventIndex = state.inspectedEventIndex || eventLength;
-      console.log('eventIndex', { state, eventLength });
 
       const commit = state.streams.commit[state.inspectedEventIndex]
       const inspectedState = commit
@@ -72,15 +71,15 @@ document.addEventListener('DOMContentLoaded', () => {
                         gridRowStart: 2,
                       },
                     }, basicEvent(effect)),
-                    ...subscriptions.map((subscription, subIndex) => (
-                      subscription && h('div', {
-                        class: 'stream-item',
-                        style: {
-                          gridColumnStart: index + 1,
-                          gridRowStart: 3 + subIndex,
-                        },
-                      }, basicEvent(subscription))
-                    )),
+                    // ...subscriptions.map((subscription, subIndex) => (
+                    //   subscription && h('div', {
+                    //     class: 'stream-item',
+                    //     style: {
+                    //       gridColumnStart: index + 1,
+                    //       gridRowStart: 3 + subIndex,
+                    //     },
+                    //   }, basicEvent(subscription))
+                    // )),
                   ];
                 }, []),
               ),
