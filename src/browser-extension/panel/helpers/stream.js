@@ -1,8 +1,9 @@
-const isAction = ({ action }) => action.type === 'function';
+const isAction = ({ action }) => action && action.type === 'function';
 const isEffect = ({ action }) => Array.isArray(action) && action[0].type === 'function';
 const isStateEffect = ({ action }) => Array.isArray(action) && action[0].type !== 'function' && Array.isArray(action[1]);
 
 export const typeOfAction = (event) => {
+  if (!event) return null;
   if (isAction(event)) {
     return 'action';
   } else if (isEffect(event)) {

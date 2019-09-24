@@ -9,10 +9,14 @@ const basicEvent = (event) => event && h('div', { class: 'event' }, [
 ]);
 
 document.addEventListener('DOMContentLoaded', () => {
+  const eventHandlers = {
+    'dispatch': actions.ProcessDispatch,
+    'subscriptions': actions.CommitDispatch,
+    'init': actions.Init,
+  };
   app({
     init: actions.Init,
     view: state => {
-      console.log('devtool state', state);
       const subs = Object.keys(state.streams.subscription);
 
       const eventLength = currentEventIndex(state);
@@ -71,15 +75,16 @@ document.addEventListener('DOMContentLoaded', () => {
                         gridRowStart: 2,
                       },
                     }, basicEvent(effect)),
-                    // ...subscriptions.map((subscription, subIndex) => (
-                    //   subscription && h('div', {
-                    //     class: 'stream-item',
-                    //     style: {
-                    //       gridColumnStart: index + 1,
-                    //       gridRowStart: 3 + subIndex,
-                    //     },
-                    //   }, basicEvent(subscription))
-                    // )),
+                    ...subscriptions.map((subscription, subIndex) => (
+                      subscription && h('div', {
+                        class: 'stream-item',
+                        style: {
+                          gridColumnStart: index + 1,
+                          gridColumnEnd: index + 1 + (subscription.ended ? subscription.timeSlices : (eventLength - index + 1)),
+                          gridRowStart: 3 + subIndex,
+                        },
+                      }, basicEvent(subscription))
+                    )),
                   ];
                 }, []),
               ),
@@ -95,12 +100,10 @@ document.addEventListener('DOMContentLoaded', () => {
         ]),
       ]);
     },
-    subscriptions: () => [
+    subscriptions: (state) => [
       effects.handleMessages({
-        // 'events': actions.EventsAdd,
-        'dispatch': actions.ProcessDispatch,
-        'subscriptions': actions.CommitDispatch,
-        'init': actions.Init,
+        events: eventHandlers,
+        isPaused: state.isPaused,
       }),
     ],
     node: document.body,

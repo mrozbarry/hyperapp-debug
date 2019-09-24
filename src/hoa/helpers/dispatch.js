@@ -35,13 +35,22 @@ const objectToFn = (key, value) => {
   return value;
 };
 
+const serializeEventTarget = target => ({
+  id: target.id,
+  className: target.className,
+  value: target.value,
+  checked: target.checked,
+});
+
 const serializeObject = object => {
   if (!object) {
     return object;
   }
   if (object instanceof Event) {
-    console.log('Cannot serialize event', object);
-    return {};
+    return {
+      target: serializeEventTarget(object.target),
+      currentTarget: serializeEventTarget(object.currentTarget),
+    };
   }
   try {
     return JSON.parse(JSON.stringify(object, fnToObject));

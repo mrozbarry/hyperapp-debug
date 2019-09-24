@@ -1,29 +1,36 @@
 import * as logger from '../helpers/logger.js';
 
-const log = logger.make('[devtool]');
+const log = () => {}; // logger.make('[devtool]');
 
-const HandleMessages = (dispatch, types) => {
-  const port = chrome.runtime.connect({ name: 'devtool' });
-  log('HandleMessages.sub', port);
+const HandleMessages = (dispatch, { events, isPaused }) => {
+  let port = null;
 
   const onMessage = (message) => {
-    log('onMessage', message);
     const keys = [
       message.type,
       `${message.type}:${message.payload.action}`,
     ];
 
-    const actionKey = keys.find(k => types[k]);
-    let action = types[actionKey];
+    const actionKey = keys.find(k => events[k]);
+    let action = events[actionKey];
 
-    if (action) {
+    if (!isPaused && action) {
       return dispatch(action, message.payload);
     }
 
-    log('onMessage', 'unhandled', message);
+    log('onMessage', 'unhandled', { isPaused }, message);
   };
 
-  port.onMessage.addListener(onMessage);
+  const connect = () => {
+    port = chrome.runtime.connect({ name: 'devtool' });
+    port.onMessage.addListener(onMessage);
+    port.onDisconnect.addListener((e) => {
+      port = null;
+      console.log('HandleMessages.sub', 'port disconnected', e);
+      setTimeout(connect, 1);
+    });
+    console.log('HandleMessage.sub.init', 'port listening');
+  };
 
   const onRelayEvent = (event) => {
     log('HandleMessages.onRelayEvent', event);
@@ -32,6 +39,8 @@ const HandleMessages = (dispatch, types) => {
   };
 
   window.addEventListener('hyperapp-debug-relay', onRelayEvent, false);
+
+  connect();
 
   return () => {
     window.removeEventListener('hyperapp-debug-relay', onRelayEvent);

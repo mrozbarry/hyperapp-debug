@@ -1,4 +1,4 @@
-const log = (...args) => console.log('[background]', ...args);
+const log = () => {}; // (...args) => console.log('[background]', ...args);
 const ports = {};
 
 chrome.runtime.onConnect.addListener((port) => {
@@ -25,6 +25,8 @@ chrome.runtime.onConnect.addListener((port) => {
 
   port.onDisconnect.addListener(() => {
     log('onDisconnect', port.name);
-    ports[port.name] = null;
+    if (ports[port.name] === port) {
+      ports[port.name] = null;
+    }
   });
 });

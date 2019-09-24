@@ -32,6 +32,7 @@ You can get the latest versions from https://github.com/LearnHyperapp/hyperapp-d
 
     return (action, props) => {
       const serialized = dispatchHelper.serialize(action, props);
+      console.log({ action, props, serialized });
       return emitDevtoolMessage('dispatch', serialized);
     };
   };
@@ -65,7 +66,7 @@ You can get the latest versions from https://github.com/LearnHyperapp/hyperapp-d
       : [];
 
     const flattened = flattenEffects([...subs]);
-    const subEvents = recordSubEvents(prevSubs, flattened); // eslint-disable-line no-unused-vars
+    const subEvents = recordSubEvents(prevSubs, flattened);
     emitDevtoolMessage('subscriptions', subEvents);
     prevSubs = flattened;
 

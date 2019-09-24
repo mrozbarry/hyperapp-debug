@@ -65,7 +65,7 @@ body * {
 }
 
 .stream-item {
-  width: 130px;
+  min-width: 130px;
   overflow: hidden;
   grid-row-start: 1;
   height: 100%;
@@ -89,4 +89,16 @@ body * {
   text-overflow: ellipsis;
   background-color: rgba(0, 0, 0, 0.1);
   height: 100%;
+}
+
+button.button {
+  text-align: center;
+  padding: 1rem;
+  background-color: rgb(120, 200, 255);
+  color: white;
+  border: 1px white solid;
+}
+
+button.button:disabled {
+  background-color: rgb(120, 200, 255, .5);
 }
