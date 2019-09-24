@@ -18,7 +18,7 @@ Then with a module bundler like [Rollup](https://rollupjs.org) or [Webpack](http
 
 ```js
 import { app, h } from 'hyperapp';
-import debug from 'hyperapp-debug';
+import withDebug from 'hyperapp-debug';
 ```
 
 If you don't want to set up a build environment, you can download Hyperapp Debug from a CDN like [unpkg.com](https://unpkg.com/hyperapp-debug) and it will be globally available through the <samp>window['hyperapp-debug'].default</samp> object. We support all ES5-compliant browsers, including Internet Explorer 10 and above.
@@ -29,26 +29,47 @@ Use <samp>debug</samp> to wrap Hyperapp's <samp>app</samp> function.
 
 ```js
 import { app } from 'hyperapp';
-import debug from 'hyperapp-debug';
-import { state, actions, view } from './your-app.js';
+import withDebug from 'hyperapp-debug';
 
-debug(app)(state, actions, view);
+withDebug(app)({
+  init: {},
+  view: () => null,
+  subscriptions: () => [],
+  node: document.getElementById('your-app'),
+});
 ```
+
+The debugger will only work if you also install the Firefox/Chrome Extension.
 
 ## History
 
 For those coming from the elm community, you may notice much inspiration from [Elm's time-travelling debugger](http://debug.elm-lang.org/edit/Thwomp.elm).
 
-## Notes
-
- 1. As part of wrapping the app function, Hyperapp Debug injects `$debugSetState` into your actions object to forcefully set the state of your app.
- 2. `debug(app)` should probably not be used in production, since it will allow users to inspect your state, it may expose information you don't want exposed.
-
-## Examples
-
- - [Hyperapp todo list with debug](https://codepen.io/mrozbarry/pen/JpMPrK)
- - [Hyperapp tweet with debug](https://codepen.io/mrozbarry/pen/zRjvOV)
-
 ## License
 
 Hyperapp Debug is MIT licensed. See [LICENSE.md](LICENSE.md).
+
+## Contributing
+
+I'm currently using [web-ext](#todo), a Mozilla npm package for developing web extensions for Firefox (and Chrome, currently unsupported).
+That means you should have the latest version of Firefox installed, if you want to take advantage of web-ext.
+
+### With web-ext
+
+```bash
+yarn
+yarn start
+```
+
+Also open a tab in the new Firefox instance to [about:debugging](about:debugging), click `This Firefox`, and then click the `Inspect` button for the Hyperapp dev tools extension.
+The testbed app is meant to have minimal real-world-ish examples, and should be extended when there are missing use-cases.
+
+### Without web-ext
+
+In chrome, enable developer mode and load an unpacked extension, which ends up being [manifest.json](./src/browser-extension/manifest.json).
+In firefox, open a tab in the new Firefox instance to [about:debugging](about:debugging), click `This Firefox`, and then click `Load Temporary Add-ons...`, and pick [manifest.json](./src/browser-extension/manifest.json).
+
+```bash
+yarn
+yarn start:testbed
+```
