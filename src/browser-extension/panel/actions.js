@@ -32,11 +32,11 @@ const decode = (data) => {
   case 'action': return [{ type, label: data.action.name, timeSlices: 1 }];
   case 'commit+effect': {
     return [
-      { type: 'commit', label: 'COMMIT', timeSlices: 1, state: data.action[0] },
+      { type: 'commit', label: 'COMMIT', timeSlices: 1, state: data.action[0], payload: data },
       { type: 'effect', label: data.action[1][0].name },
     ];
   }
-  case 'commit': return [{ type, label: 'COMMIT', timeSlices:1 }];
+  case 'commit': return [{ type, label: 'COMMIT', timeSlices: 1, state: data.action, payload: data }];
   default: return [];
   }
 };
@@ -87,7 +87,6 @@ export const ProcessDispatch = (state, props) => {
 };
 
 export const CommitDispatch = (state, props) => {
-  console.log('CommitDispatch', { state, props });
   const items = state.queue.reduce((nextItems, event) => {
     return {
       ...nextItems,
@@ -96,23 +95,31 @@ export const CommitDispatch = (state, props) => {
   }, {});
   const eventIndex = currentEventIndex(state) + 1;
 
-  return {
-    ...state,
-    queue: [],
-    streams: {
-      ...state.streams,
-      action: injectIntoArray(state.streams.action, eventIndex, items.action),
-      commit: injectIntoArray(state.streams.commit, eventIndex, items.commit),
-      effect: injectIntoArray(state.streams.effect, eventIndex, items.effect),
-      subscription: props.reduce((subscription, event) => (
-        mergeSubs(subscription, eventIndex, event)
-      ), state.streams.subscription),
+  return [
+    {
+      ...state,
+      queue: [],
+      streams: {
+        ...state.streams,
+        action: injectIntoArray(state.streams.action, eventIndex, items.action),
+        commit: injectIntoArray(state.streams.commit, eventIndex, items.commit),
+        effect: injectIntoArray(state.streams.effect, eventIndex, items.effect),
+        subscription: props.reduce((subscription, event) => (
+          mergeSubs(subscription, eventIndex, event)
+        ), state.streams.subscription),
+      },
     },
-  };
+    effects.scrollEventsTo({ eventIndex }),
+  ];
 };
 
 export const InspectEventIndex = (state, inspectedEventIndex) => {
   // console.log('InspectEventIndex', { state, inspectedEventIndex });
+  const commit = state.streams.commit[inspectedEventIndex];
+  if (!commit) {
+    return state;
+  }
+
   return [
     {
       ...state,
@@ -122,12 +129,8 @@ export const InspectEventIndex = (state, inspectedEventIndex) => {
     [
       effects.scrollEventsTo({ eventIndex: inspectedEventIndex }),
       effects.outgoingMessage({
-        type: 'set-state',
-        payload: {
-          inspectedEventIndex,
-          actions: state.streams.action,
-          state: (state.streams.commit[inspectedEventIndex] || { state: 'undefined' }).state,
-        }
+        type: 'dispatch',
+        payload: commit.payload,
       }),
     ],
   ];

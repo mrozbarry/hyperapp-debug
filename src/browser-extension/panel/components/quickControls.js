@@ -16,9 +16,8 @@ export const quickControls = ({ inspectedEventIndex, eventIndex, isPaused }) => 
 
   h('button', {
     class: 'button',
-    disabled: !!isPaused,
-    onclick: [actions.PauseApp, { isPaused: true }],
-  }, 'Pause'),
+    onclick: [actions.PauseApp, { isPaused: !isPaused }],
+  }, isPaused ? 'Resume' : 'Pause'),
 
   h('button', {
     class: 'button',
@@ -31,12 +30,4 @@ export const quickControls = ({ inspectedEventIndex, eventIndex, isPaused }) => 
     disabled: inspectedEventIndex === eventIndex,
     onclick: [actions.InspectEventIndex, eventIndex]
   }, 'Fast-Forward'),
-
-  ' | ',
-
-  h('button', {
-    class: 'button',
-    disabled: !isPaused,
-    onclick: [actions.PauseApp, { isPaused: false }],
-  }, 'Resume'),
 ];

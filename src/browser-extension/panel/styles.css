@@ -4,6 +4,7 @@ body {
   font-family: sans-serif;
   padding: 0;
   margin: 0;
+  height: 100vh;
 }
 
 body * {
@@ -16,17 +17,27 @@ body * {
   align-items: flex-start;
   justify-content: flex-start;
   width: 100vw;
+  height: 100%;
 }
 
 .layout-events {
   flex: 1;
-  max-width: calc(100vw - 400px);
+  width: calc(100vw - 400px);
   overflow: auto;
 }
 
+.layout-events .controls {
+  margin-bottom: 8px;
+}
+
 .layout-inspector {
-  flex: 0;
-  width: 400px;
+  flex: 1;
+  /* width: 400px; */
+  max-width: 400px;
+  border-left: 1px #efefef solid;
+  overflow: auto;
+  padding: 4px;
+  height: 100%;
 }
 
 .layout-inspector pre {
@@ -77,6 +88,10 @@ body * {
   text-align: left;
   font-size: 100%;
   font-weight: normal;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
 }
 
 .stream-item--active {
@@ -89,6 +104,7 @@ body * {
   text-overflow: ellipsis;
   background-color: rgba(0, 0, 0, 0.1);
   height: 100%;
+  width: 100%;
 }
 
 button.button {
