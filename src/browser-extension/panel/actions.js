@@ -12,18 +12,21 @@ const injectIntoArray = (arr, index, data) => {
   return arr;
 };
 
-export const Init = () => ({
-  queue: [],
-  streams: {
-    action: [],
-    commit: [],
-    effect: [],
-    subscription: {},
-  },
-  inspectedEventIndex: null,
-  eventIndex: 0,
-  isPaused: false,
-});
+export const Init = () => {
+  console.log('[panel]', 'init');
+  return {
+    queue: [],
+    streams: {
+      action: [],
+      commit: [],
+      effect: [],
+      subscription: {},
+    },
+    inspectedEventIndex: null,
+    eventIndex: 0,
+    isPaused: false,
+  };
+};
 
 const decode = (data) => {
   if (!data) return [];
@@ -73,20 +76,21 @@ const mergeSubs = (subscription, eventIndex, data) => {
   return subscription;
 };
 
-export const ProcessDispatch = (state, props) => {
+export const ProcessDispatch = (state, { payload, wasQueued }) => {
   return [
     {
       ...state,
-      queue: state.queue.concat(decode(props)),
+      queue: state.queue.concat(decode(payload)),
     },
     effects.outgoingMessage({
       type: 'dispatch',
-      payload: props,
+      payload,
+      wasQueued,
     }),
   ];
 };
 
-export const CommitDispatch = (state, props) => {
+export const CommitDispatch = (state, { payload }) => {
   const items = state.queue.reduce((nextItems, event) => {
     return {
       ...nextItems,
@@ -104,7 +108,7 @@ export const CommitDispatch = (state, props) => {
         action: injectIntoArray(state.streams.action, eventIndex, items.action),
         commit: injectIntoArray(state.streams.commit, eventIndex, items.commit),
         effect: injectIntoArray(state.streams.effect, eventIndex, items.effect),
-        subscription: props.reduce((subscription, event) => (
+        subscription: payload.reduce((subscription, event) => (
           mergeSubs(subscription, eventIndex, event)
         ), state.streams.subscription),
       },

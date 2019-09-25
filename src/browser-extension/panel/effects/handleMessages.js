@@ -15,7 +15,7 @@ const HandleMessages = (dispatch, { events, isPaused }) => {
     let action = events[actionKey];
 
     if (!isPaused && action) {
-      return dispatch(action, message.payload);
+      return dispatch(action, message);
     }
 
     log('onMessage', 'unhandled', { isPaused }, message);

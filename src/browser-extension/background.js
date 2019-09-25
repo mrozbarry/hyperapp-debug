@@ -1,32 +1,56 @@
 const log = () => {}; // (...args) => console.log('[background]', ...args);
 const ports = {};
+let queuedMessages = [];
 
-chrome.runtime.onConnect.addListener((port) => {
-  ports[port.name] = port;
-  log('onConnect', port, { ports });
+const getQueuedFor = (name) => {
+  const messages = queuedMessages.filter(m => m.message.target === name);
+  return messages;
+};
+
+const removeQueued = (item) => {
+  queuedMessages = queuedMessages.filter(m => m !== item);
+};
+
+const removeQueuedFor = (port) => {
+  queuedMessages = queuedMessages.filter(m => m.port !== port);
+};
+
+chrome.runtime.onConnect.addListener((incomingPort) => {
+  ports[incomingPort.name] = incomingPort;
+  log('onConnect', incomingPort, { ports });
 
   const sendMessage = (message) => {
-    const retry = () => {
-      setTimeout(() => {
-        sendMessage(message);
-      }, 500);
-    };
     const port = ports[message.target];
     if (!port) {
-      return retry();
+      return queuedMessages.push({
+        port,
+        message,
+      });
     }
     port.postMessage(message);
   };
 
-  port.onMessage.addListener(async (message) => {
-    log('onMessage', port.name, message);
+  const sendPending = () => {
+    const pendingMessages = getQueuedFor(incomingPort.name);
+    for (const msg of pendingMessages) {
+      sendMessage(msg.message);
+      removeQueued(msg);
+    }
+  };
+
+  sendPending();
+
+  incomingPort.onMessage.addListener(async (message) => {
+    log('onMessage', incomingPort.name, message);
+    sendPending();
     sendMessage(message);
   });
 
-  port.onDisconnect.addListener(() => {
-    log('onDisconnect', port.name);
-    if (ports[port.name] === port) {
-      ports[port.name] = null;
+  incomingPort.onDisconnect.addListener(() => {
+    log('onDisconnect', incomingPort.name);
+    removeQueuedFor(incomingPort);
+    if (ports[incomingPort.name] === incomingPort) {
+      ports[incomingPort.name] = null;
     }
   });
 });
