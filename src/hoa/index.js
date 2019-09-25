@@ -20,11 +20,11 @@ You can get the latest versions from https://github.com/LearnHyperapp/hyperapp-d
     raw(APP_TO_DEVTOOL, type, message);
   };
 
-  // const emitPanelMessage = (type, message = {}) => {
-  //   raw(APP_TO_PANEL, type, message);
-  // };
+  const emitPanelMessage = (type, message = {}) => {
+    raw(APP_TO_PANEL, type, message);
+  };
 
-  console.log('sending init');
+  emitPanelMessage('query');
   emitDevtoolMessage('init');
 
   const middleware = originalDispatch => {

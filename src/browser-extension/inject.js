@@ -20,7 +20,7 @@ const connect = () => {
   }
 
   const postMessage = (message) => {
-    if (!connectedAndOpen) {
+    if (!connectedAndOpen && message.target === 'devtool') {
       pendingMessages.push({ ...message, wasQueued: true });
       return relayEventsToApp(message);
     }
