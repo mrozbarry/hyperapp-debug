@@ -20,11 +20,11 @@ You can get the latest versions from https://github.com/LearnHyperapp/hyperapp-d
     raw(APP_TO_DEVTOOL, type, message);
   };
 
-  const emitPanelMessage = (type, message = {}) => {
-    raw(APP_TO_PANEL, type, message);
-  };
+  // const emitPanelMessage = (type, message = {}) => {
+  //   raw(APP_TO_PANEL, type, message);
+  // };
 
-  emitPanelMessage('use-hyperapp-devtool');
+  console.log('sending init');
   emitDevtoolMessage('init');
 
   const middleware = originalDispatch => {
@@ -32,7 +32,6 @@ You can get the latest versions from https://github.com/LearnHyperapp/hyperapp-d
 
     return (action, props) => {
       const serialized = dispatchHelper.serialize(action, props);
-      console.log({ action, props, serialized });
       return emitDevtoolMessage('dispatch', serialized);
     };
   };
@@ -40,11 +39,16 @@ You can get the latest versions from https://github.com/LearnHyperapp/hyperapp-d
   const DevToolSub = () => {
     const onDevtoolMessage = (event) => {
       const message = JSON.parse(event.detail);
+      console.log('onDevtoolMessage', message);
       switch (message.type) {
       case 'dispatch': {
         const deserialized = dispatchHelper.deserialize(message.payload);
         return dispatch(deserialized.action, deserialized.props);
       }
+
+      case 'init':
+      case 'subscriptions':
+        break;
 
       default:
         console.log('Unable to process devtool message', message);
