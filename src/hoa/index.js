@@ -3,7 +3,7 @@ import { flattenEffects } from './helpers/flattenEffects';
 import { raw } from './effects/messageDevTool';
 import * as dispatchHelper from './helpers/dispatch';
 
-export const debug = app => (props) => {
+export default app => (props) => {
   let dispatch = null;
   const devToolsConfig = typeof window.hyperappDevTool === 'function' && JSON.parse(window.hyperappDevTool());
   if (!devToolsConfig) {
