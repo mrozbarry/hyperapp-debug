@@ -39,7 +39,6 @@ You can get the latest versions from https://github.com/LearnHyperapp/hyperapp-d
   const DevToolSub = () => {
     const onDevtoolMessage = (event) => {
       const message = JSON.parse(event.detail);
-      console.log('onDevtoolMessage', message);
       switch (message.type) {
       case 'dispatch': {
         const deserialized = dispatchHelper.deserialize(message.payload);

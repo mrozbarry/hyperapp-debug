@@ -1,0 +1,11 @@
+node_modules
+yarn-*.log
+.cache
+dist
+web-ext-artifacts
+src/browser-extension
+src/test-bed
+travis.yml
+.eslintrc.js
+babel.config.js
+yarn.lock
