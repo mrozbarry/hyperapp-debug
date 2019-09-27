@@ -4,7 +4,7 @@
   "source": "./src/hoa/index.js",
   "main": "withDebug.js",
   "module": "withDebug.module.js",
-  "unpkg": "withDebug.unpkg.js",
+  "unpkg": "withDebug.umd.js",
   "license": "MIT",
   "repository": "github:HyperappCommunity/hyperapp-debug",
   "scripts": {
