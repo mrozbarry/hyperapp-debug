@@ -11,7 +11,7 @@
     "start:testbed": "parcel ./src/test-bed/index.html",
     "start:extension": "web-ext run -s ./src/browser-extension -u http://localhost:1234",
     "build:extension": "web-ext build -s ./src/browser-extension",
-    "build:hoa": "NODE_ENV=production microbundle build",
+    "build:hoa": "NODE_ENV=production microbundle build --name withDebug",
     "start": "concurrently \"yarn start:testbed\" \"sleep 5 && yarn start:extension\"",
     "prepublishOnly": "yarn build:hoa",
     "test": "ava"
