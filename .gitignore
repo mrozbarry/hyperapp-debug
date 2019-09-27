@@ -3,6 +3,5 @@ yarn-*.log
 .cache
 bundle.js
 dist
-withDebug.js
-withDebug.js.map
+withDebug.*
 web-ext-artifacts
