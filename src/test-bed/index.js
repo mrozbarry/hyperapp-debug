@@ -1,6 +1,6 @@
 import { app, h } from 'hyperapp';
 import { Http, Interval } from 'hyperapp-fx';
-import { debug } from '../hoa/index.js';
+import withDebug from '../hoa/index.js';
 
 const LOAD_STATUS = {
   pending: 'pending',
@@ -60,7 +60,7 @@ const testCase = ({ title, description }, children) => h('section', null, [
   ]),
 ]);
 
-const kill = debug(app)({
+const kill = withDebug(app)({
   init: Init,
   view: state => h('article', null, [
     h('h1', null, 'Hyperapp Debug Testbed'),
