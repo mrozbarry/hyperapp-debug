@@ -9,6 +9,16 @@ const basicEvent = (event) => event && h('div', { class: 'event' }, [
   h('span', null, event.label),
 ]);
 
+const translateInspectableObject = (object) => {
+  return JSON.parse(JSON.stringify(object), (key, value) => {
+    if (value.type === 'function' && value.name) {
+      const temp = { [value.name]: () => {} };
+      return temp[value.name];
+    }
+    return value;
+  });
+};
+
 document.addEventListener('DOMContentLoaded', () => {
   const eventHandlers = {
     'dispatch': actions.ProcessDispatch,
@@ -29,9 +39,19 @@ document.addEventListener('DOMContentLoaded', () => {
         : state.inspectedEventIndex;
 
 
-      const commit = state.streams.commit[eventIndex]
+      const commit = state.streams.commit[eventIndex];
       const inspectedState = commit
         ? commit.state
+        : {};
+
+      const action = state.streams.action[eventIndex];
+      const inspectedAction = action
+        ? action.props
+        : {};
+
+      const effect = state.streams.effect[eventIndex];
+      const inspectedEffect = effect
+        ? effect.props
         : {};
 
       return h('body', null, [
@@ -71,6 +91,7 @@ document.addEventListener('DOMContentLoaded', () => {
                       gridRowStart: 1,
                     },
                   }, basicEvent(action)),
+
                   effect && h('div', {
                     class: 'stream-item',
                     style: {
@@ -78,6 +99,7 @@ document.addEventListener('DOMContentLoaded', () => {
                       gridRowStart: 2,
                     },
                   }, basicEvent(effect)),
+
                   ...subscriptions.map((subscription, subIndex) => (
                     subscription && h('div', {
                       class: 'stream-item',
@@ -90,32 +112,109 @@ document.addEventListener('DOMContentLoaded', () => {
                   )),
                 ];
               }, [])),
-            // h('div', { class: 'stream-cursor' }),
             ),
           ]),
           h('section', { class: 'layout-inspector' }, [
-            h('h2', null, 'Inspector', state.inspectedEventIndex),
-            h('h3', null, 'Dispatched'),
-            h('code', null, [
-              h('pre', null, JSON.stringify({}, null, 2)),
-            ]),
-            h('h3', null, 'State'),
-            h('code', null, [
-              jsonView.view({
+            h('h3', {
+              style: {
+                borderBottom: '1px #eee solid',
+                padding: 0,
+                margin: 0,
+                paddingBottom: '4px',
+                marginBottom: '4px',
+              },
+            }, 'State'),
+
+            h('code', {
+              style: {
+                display: 'block',
+                padding: '0 4px',
+                margin: '8px 0',
+                marginBottom: '16px',
+              },
+            }, [
+              inspectedState && jsonView.view({
                 value: inspectedState,
-                openedPaths: state.state.openedPaths,
+                openedPaths: state.appState.openedPaths,
                 actions: {
                   open: (state, props) => ({
                     ...state,
-                    state: jsonView.OpenPath(state.state, props)
+                    appState: jsonView.OpenPath(state.appState, props)
                   }),
                   close: (state, props) => ({
                     ...state,
-                    state: jsonView.ClosePath(state.state, props)
+                    appState: jsonView.ClosePath(state.appState, props)
                   }),
                 },
               }),
             ]),
+
+            h('h3', {
+              style: {
+                borderBottom: '1px #eee solid',
+                padding: 0,
+                margin: 0,
+                paddingBottom: '4px',
+                marginBottom: '4px',
+              },
+            }, `Action<${action ? action.label : 'NONE'}>`),
+            h('code', {
+              style: {
+                display: 'block',
+                padding: '0 4px',
+                margin: '8px 0',
+                marginBottom: '16px',
+              },
+            }, [
+              action && inspectedAction && jsonView.view({
+                value: translateInspectableObject(inspectedAction),
+                openedPaths: state.appAction.openedPaths,
+                actions: {
+                  open: (state, props) => ({
+                    ...state,
+                    appAction: jsonView.OpenPath(state.appAction, props)
+                  }),
+                  close: (state, props) => ({
+                    ...state,
+                    appAction: jsonView.ClosePath(state.appAction, props)
+                  }),
+                },
+              }),
+            ]),
+
+            h('h3', {
+              style: {
+                borderBottom: '1px #eee solid',
+                padding: 0,
+                margin: 0,
+                paddingBottom: '4px',
+                marginBottom: '4px',
+              },
+            }, `Effect<${effect ? effect.label : 'NONE'}>`),
+            h('code', {
+              style: {
+                display: 'block',
+                padding: '0 4px',
+                margin: '8px 0',
+                marginBottom: '16px',
+              },
+            }, [
+              effect && inspectedEffect && jsonView.view({
+                value: translateInspectableObject(inspectedEffect),
+                openedPaths: state.appEffect.openedPaths,
+                actions: {
+                  open: (state, props) => ({
+                    ...state,
+                    appEffect: jsonView.OpenPath(state.appEffect, props)
+                  }),
+                  close: (state, props) => ({
+                    ...state,
+                    appEffect: jsonView.ClosePath(state.appEffect, props)
+                  }),
+                },
+              }),
+            ]),
+
           ]),
         ]),
       ]);

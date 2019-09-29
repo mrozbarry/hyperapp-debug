@@ -13,7 +13,6 @@ const injectIntoArray = (arr, index, data) => {
 };
 
 export const Init = () => {
-  console.log('[panel]', 'init');
   return {
     queue: [],
     streams: {
@@ -25,9 +24,15 @@ export const Init = () => {
     inspectedEventIndex: null,
     eventIndex: 0,
     isPaused: false,
-    state: {
+    appState: {
       openedPaths: [],
-    }
+    },
+    appAction: {
+      openedPaths: [],
+    },
+    appEffect: {
+      openedPaths: [],
+    },
   };
 };
 
@@ -35,11 +40,11 @@ const decode = (data) => {
   if (!data) return [];
   const type = streamHelpers.typeOfAction(data);
   switch (type) {
-  case 'action': return [{ type, label: data.action.name, timeSlices: 1 }];
+  case 'action': return [{ type, label: data.action.name, props: data.props, timeSlices: 1 }];
   case 'commit+effect': {
     return [
       { type: 'commit', label: 'COMMIT', timeSlices: 1, state: data.action[0], payload: data },
-      { type: 'effect', label: data.action[1][0].name },
+      { type: 'effect', label: data.action[1][0].name, props: data.action[1][1] },
     ];
   }
   case 'commit': return [{ type, label: 'COMMIT', timeSlices: 1, state: data.action, payload: data }];
