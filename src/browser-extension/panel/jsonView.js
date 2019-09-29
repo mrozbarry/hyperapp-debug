@@ -7,11 +7,6 @@ const setOnRootState = (state, update) => ({
 
 const getOnRootState = state => state;
 
-const defaultActionProps = {
-  get: getOnRootState,
-  set: setOnRootState,
-};
-
 const condenseOpenedPaths = (openedPaths) => openedPaths.reduce((condensed, path) => {
   const containedIndex = condensed.findIndex(c => path.startsWith(c));
   return containedIndex === -1
@@ -64,14 +59,14 @@ const renderValueWithConstructor = (type, value, props) => [
   value,
 ];
 
-const renderNonPrimitive = (value, props) => {
+const renderNonPrimitive = (type, value, props) => {
   return h('span', {
     style: {
       borderBottom: '1px #aaa dotted',
       cursor: 'help',
     },
     title: 'This is a non-primitive object that may contain more data',
-  }, renderValueWithConstructor(value.constructor.name, value.toString(), props));
+  }, renderValueWithConstructor(type, value.toString(), props));
 };
 
 const renderValueObject = (value, props, path) => {
@@ -152,6 +147,9 @@ const renderValueByType = (value, props, path) => {
       },
     }, renderValueWithConstructor(value.constructor.name, value.toString(), props));
 
+  case 'function':
+    return renderNonPrimitive(value.constructor.name, `${value.name}()`, props);
+
   case 'object': {
     if (Array.isArray(value)) {
       return renderValueObject(value, props, path);
@@ -176,7 +174,7 @@ const renderValueByType = (value, props, path) => {
 
   default:
     // FIXME: Should hyperapp be filtering non-primitives for us? It seems like it is, and is that okay?
-    return renderNonPrimitive(value, props);
+    return renderNonPrimitive(value.contructor.name, value, props);
   }
 };
 
