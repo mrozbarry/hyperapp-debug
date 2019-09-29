@@ -3,6 +3,7 @@ import * as actions from './actions.js';
 import * as effects from './effects/index.js';
 import { quickControls } from './components/quickControls.js';
 import currentEventIndex from './helpers/currentEventIndex.js';
+import * as jsonView from './jsonView.js';
 
 const basicEvent = (event) => event && h('div', { class: 'event' }, [
   h('span', null, event.label),
@@ -100,7 +101,20 @@ document.addEventListener('DOMContentLoaded', () => {
             ]),
             h('h3', null, 'State'),
             h('code', null, [
-              h('pre', null, JSON.stringify(inspectedState, null, 2)),
+              jsonView.view({
+                value: inspectedState,
+                openedPaths: state.state.openedPaths,
+                actions: {
+                  open: (state, props) => ({
+                    ...state,
+                    state: jsonView.OpenPath(state.state, props)
+                  }),
+                  close: (state, props) => ({
+                    ...state,
+                    state: jsonView.ClosePath(state.state, props)
+                  }),
+                },
+              }),
             ]),
           ]),
         ]),

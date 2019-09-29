@@ -25,6 +25,9 @@ export const Init = () => {
     inspectedEventIndex: null,
     eventIndex: 0,
     isPaused: false,
+    state: {
+      openedPaths: [],
+    }
   };
 };
 
