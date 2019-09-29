@@ -23,7 +23,7 @@ body * {
 .layout-events {
   flex: 1;
   width: calc(100vw - 400px);
-  overflow: auto;
+  overflow-x: auto;
 }
 
 .layout-events .controls {
@@ -40,10 +40,7 @@ body * {
   height: 100%;
 }
 
-.layout-inspector pre {
-  text-overflow: none;
-  overflow: auto;
-}
+
 
 .stream-container {
   display: inline-block;
@@ -117,4 +114,21 @@ button.button {
 
 button.button:disabled {
   background-color: rgb(120, 200, 255, .5);
+}
+
+@media (max-width: 800px) {
+  .layout {
+    display: block;
+    width: 100vw;
+    height: 100vh;
+  }
+
+  .layout-events {
+    width: 100%;
+  }
+
+  .layout-inspector {
+    max-width: auto;
+    width: 100%;
+  }
 }
