@@ -60,7 +60,7 @@ const testCase = ({ title, description }, children) => h('section', null, [
   ]),
 ]);
 
-const kill = withDebug(app)({
+withDebug(app)({
   init: Init,
   view: state => h('article', null, [
     h('h1', null, 'Hyperapp Debug Testbed'),
