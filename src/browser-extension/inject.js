@@ -11,12 +11,13 @@ let pendingMessages = [];
 const connect = () => {
   const reconnect = () => {
     port = null;
-    setTimeout(connect, 1000); };
+    setTimeout(connect, 1000);
+  };
 
   try {
     port = chrome.runtime.connect({ name: 'app' });
   } catch (err) {
-    reconnect();
+    return reconnect();
   }
 
   const postMessage = (message) => {

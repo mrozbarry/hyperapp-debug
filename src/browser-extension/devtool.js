@@ -12,7 +12,7 @@ const connect = () => {
     log('connected', port);
   } catch (err) {
     log.warn(err);
-    setTimeout(connect, 100);
+    return setTimeout(connect, 100);
   }
 
   const enableDevtools = () => port.postMessage({ target: 'app', type: 'panel-shown' });
