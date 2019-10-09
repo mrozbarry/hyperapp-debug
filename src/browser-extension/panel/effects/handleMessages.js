@@ -1,5 +1,3 @@
-import * as logger from '../helpers/logger.js';
-
 const log = () => {}; // logger.make('[devtool]');
 
 const HandleMessages = (dispatch, { events, isPaused }) => {
