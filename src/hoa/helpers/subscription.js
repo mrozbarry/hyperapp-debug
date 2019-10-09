@@ -1,4 +1,5 @@
 import { makeSubStartEvent, makeSubStopEvent } from './events';
+import { flattenEffects } from './flattenEffects';
 
 const areObjectsShallowSame = (a, b) => {
   const aKeys = Object.keys(a);
@@ -6,7 +7,7 @@ const areObjectsShallowSame = (a, b) => {
   const keys = Array.from(new Set([...aKeys, ...bKeys]));
 
   return !keys.some(k => a[k] != b[k]);
-}
+};
 
 export const recordSubEvents = (prevSubs, subs) => {
   const cancelled = [];
@@ -31,5 +32,21 @@ export const recordSubEvents = (prevSubs, subs) => {
   return [
     ...cancelled.map(c => makeSubStopEvent(c)),
     ...started.map(s => makeSubStartEvent(s)),
-  ]
+  ];
+};
+
+export const wrap = (subscriptions, cb) => {
+  let prevSubs = [];
+  return (state) => {
+    const subs = subscriptions
+      ? subscriptions(state)
+      : [];
+
+    const flattened = flattenEffects([...subs]);
+    const subEvents = recordSubEvents(prevSubs, flattened);
+    cb(subEvents);
+    prevSubs = flattened;
+
+    return subs;
+  };
 };
