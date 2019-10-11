@@ -1,7 +1,3 @@
-import * as logger from './panel/helpers/logger.js';
-
-const log = logger.make('[panel]');
-
 let port = null;
 let devPanel = null;
 let isShown = false;
@@ -9,9 +5,9 @@ let isShown = false;
 const connect = () => {
   try {
     port = chrome.runtime.connect({ name: 'panel' });
-    log('connected', port);
+    console.log('connected', port);
   } catch (err) {
-    log.warn(err);
+    console.log(err);
     return setTimeout(connect, 100);
   }
 

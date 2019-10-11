@@ -1,5 +1,3 @@
-const log = () => {}; // logger.make('[devtool]');
-
 const HandleMessages = (dispatch, { events, isPaused }) => {
   let port = null;
 
@@ -16,7 +14,7 @@ const HandleMessages = (dispatch, { events, isPaused }) => {
       return dispatch(action, message);
     }
 
-    log('onMessage', 'unhandled', { isPaused }, message);
+    console.log('onMessage', 'unhandled', { isPaused }, message);
   };
 
   const connect = () => {
@@ -31,7 +29,7 @@ const HandleMessages = (dispatch, { events, isPaused }) => {
   };
 
   const onRelayEvent = (event) => {
-    log('HandleMessages.onRelayEvent', event);
+    console.log('HandleMessages.onRelayEvent', event);
     const message = event.detail;
     port.postMessage(message);
   };

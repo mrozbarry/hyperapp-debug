@@ -1,6 +1,4 @@
 import * as subscriptionHelper from './helpers/subscription';
-import { flattenEffects } from './helpers/flattenEffects';
-import { raw } from './effects/messageDevTool';
 import listener from './helpers/listener';
 import * as dispatchHelper from './helpers/dispatch';
 
@@ -15,12 +13,26 @@ export default app => (props) => {
   const appId = randId();
   const appName = props.debugName || appId;
 
-  const emitDevtoolMessage = (type, message = {}) => {
-    raw(APP_TO_DEVTOOL, type, message);
+  const emit = (eventName, type, payload, id) => {
+    const detail = {
+      type,
+      payload: JSON.parse(JSON.stringify(payload)),
+      appId,
+      appName,
+      id,
+    };
+    console.log('emit', detail);
+    const event = new CustomEvent(eventName, { detail });
+    window.dispatchEvent(event);
+  };
+
+
+  const emitDevtoolMessage = (type, message, id) => {
+    emit(APP_TO_DEVTOOL, type, message || {}, id);
   };
 
   const emitPanelMessage = (type, message = {}) => {
-    raw(APP_TO_PANEL, type, message);
+    emit(APP_TO_PANEL, type, message);
   };
 
   emitPanelMessage('query');
@@ -39,13 +51,8 @@ export default app => (props) => {
 
       dispatchHistory[id] = { action, props };
 
-      const serialized = {
-        ...dispatchHelper.serialize(action, props),
-        appId,
-        id
-      };
-
-      return emitDevtoolMessage('dispatch', serialized);
+      const serialized = dispatchHelper.serialize(action, props);
+      return emitDevtoolMessage('dispatch', serialized, id);
     };
   };
 
@@ -54,7 +61,7 @@ export default app => (props) => {
       return;
     }
 
-    const item = dispatchHistory[message.payload.id];
+    const item = dispatchHistory[message.id];
     return item
       ? dispatch(item.action, item.props)
       : null;
@@ -75,13 +82,15 @@ export default app => (props) => {
   const cancelDevToolListener = listener(DEVTOOL_TO_APP, (event) => {
     const message = JSON.parse(event.detail);
     const handler = devToolMessageHandler[message.type];
+    console.log('devToolListener.message', message, handler);
     if (!handler) {
-      console.warn('no handler for', message.type, message);
+      return console.warn('no handler for', message.type, message);
     }
     handler(message);
   });
 
   const subscriptions = subscriptionHelper.wrap(props.subscriptions, (subEvents) => {
+    console.log('subscriptionHeplper.subEvents', subEvents);
     emitDevtoolMessage('subscriptions', subEvents);
   });
 

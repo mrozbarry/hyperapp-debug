@@ -1,4 +1,3 @@
-const log = () => {}; // (...args) => console.log('[background]', ...args);
 const ports = {};
 let queuedMessages = [];
 
@@ -17,7 +16,7 @@ const removeQueuedFor = (port) => {
 
 chrome.runtime.onConnect.addListener((incomingPort) => {
   ports[incomingPort.name] = incomingPort;
-  log('onConnect', incomingPort, { ports });
+  console.log('onConnect', incomingPort, { ports });
 
   const sendMessage = (message) => {
     const port = ports[message.target];
@@ -41,13 +40,13 @@ chrome.runtime.onConnect.addListener((incomingPort) => {
   sendPending();
 
   incomingPort.onMessage.addListener(async (message) => {
-    log('onMessage', incomingPort.name, message);
+    console.log('onMessage', incomingPort.name, message);
     sendPending();
     sendMessage(message);
   });
 
   incomingPort.onDisconnect.addListener(() => {
-    log('onDisconnect', incomingPort.name);
+    console.log('onDisconnect', incomingPort.name);
     removeQueuedFor(incomingPort);
     if (ports[incomingPort.name] === incomingPort) {
       ports[incomingPort.name] = null;

@@ -40,14 +40,16 @@ const decode = (data) => {
   if (!data) return [];
   const type = streamHelpers.typeOfAction(data);
   switch (type) {
-  case 'action': return [{ type, label: data.action.name, props: data.props, timeSlices: 1 }];
-  case 'commit+effect': {
-    return [
-      { type: 'commit', label: 'COMMIT', timeSlices: 1, state: data.action[0], payload: data },
-      { type: 'effect', label: data.action[1][0].name, props: data.action[1][1] },
-    ];
-  }
-  case 'commit': return [{ type, label: 'COMMIT', timeSlices: 1, state: data.action, payload: data }];
+  case 'action': return [
+    { type, label: data.action.name, props: data.props, timeSlices: 1 },
+  ];
+  case 'commit+effect': return [
+    { type: 'commit', label: 'COMMIT', timeSlices: 1, state: data.action[0], payload: data, id: data.id },
+    { type: 'effect', label: data.action[1][0].name, props: data.action[1][1], id: data.id },
+  ];
+  case 'commit': return [
+    { type, label: 'COMMIT', timeSlices: 1, state: data.action, payload: data, id: data.id },
+  ];
   default: return [];
   }
 };
@@ -84,14 +86,17 @@ const mergeSubs = (subscription, eventIndex, data) => {
   return subscription;
 };
 
-export const ProcessDispatch = (state, { payload, wasQueued }) => {
+export const ProcessDispatch = (state, message) => {
+  const { payload, appId, id, type, wasQueued } = message;
   return [
     {
       ...state,
       queue: state.queue.concat(decode(payload)),
     },
     effects.outgoingMessage({
-      type: 'dispatch',
+      appId,
+      id,
+      type,
       payload,
       wasQueued,
     }),
@@ -99,6 +104,7 @@ export const ProcessDispatch = (state, { payload, wasQueued }) => {
 };
 
 export const CommitDispatch = (state, { payload }) => {
+  console.log('CommitDispatch', 'queue', state.queue);
   const items = state.queue.reduce((nextItems, event) => {
     return {
       ...nextItems,
@@ -107,19 +113,23 @@ export const CommitDispatch = (state, { payload }) => {
   }, {});
   const eventIndex = currentEventIndex(state) + 1;
 
+  const streams = {
+    ...state.streams,
+    action: injectIntoArray(state.streams.action, eventIndex, items.action),
+    commit: injectIntoArray(state.streams.commit, eventIndex, items.commit),
+    effect: injectIntoArray(state.streams.effect, eventIndex, items.effect),
+    subscription: payload.reduce((subscription, event) => (
+      mergeSubs(subscription, eventIndex, event)
+    ), state.streams.subscription),
+  };
+
+  console.log('CommitDispatch', streams);
+
   return [
     {
       ...state,
       queue: [],
-      streams: {
-        ...state.streams,
-        action: injectIntoArray(state.streams.action, eventIndex, items.action),
-        commit: injectIntoArray(state.streams.commit, eventIndex, items.commit),
-        effect: injectIntoArray(state.streams.effect, eventIndex, items.effect),
-        subscription: payload.reduce((subscription, event) => (
-          mergeSubs(subscription, eventIndex, event)
-        ), state.streams.subscription),
-      },
+      streams,
     },
     effects.scrollEventsTo({ eventIndex }),
   ];

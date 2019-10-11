@@ -2,11 +2,8 @@ const APP_TO_DEVTOOL = '$hyperapp-app-to-devtool';
 const APP_TO_PANEL = '$hyperapp-app-to-panel';
 const DEVTOOL_TO_APP = '$hyperapp-devtool-to-app';
 
-const log = (...args) => (void args); // console.log('[inject]', ...args);
-
 let port = null;
 let connectedAndOpen = false;
-let pendingMessages = [];
 
 const connect = () => {
   const reconnect = () => {
@@ -21,8 +18,8 @@ const connect = () => {
   }
 
   const postMessage = (message) => {
+    console.log('inject.postMessage', { connectedAndOpen, target: message.target });
     if (!connectedAndOpen && message.target === 'devtool') {
-      pendingMessages.push({ ...message, wasQueued: true });
       return relayEventsToApp(message);
     }
     console.log('[inject]', 'postMessage', message);
@@ -30,7 +27,7 @@ const connect = () => {
   };
 
   const relayEventsToDevtool = (e) => {
-    log('relayEventsToDevtool', e);
+    console.log('relayEventsToDevtool', e.detail);
     postMessage({
       target: 'devtool',
       ...e.detail,
@@ -38,7 +35,7 @@ const connect = () => {
   };
 
   const relayEventsToPanel = (e) => {
-    log('relayEventsToPanel', e);
+    console.log('relayEventsToPanel', e);
     postMessage({
       target: 'panel',
       ...e.detail,
@@ -46,17 +43,10 @@ const connect = () => {
   };
 
   const relayEventsToApp = (message) => {
-    log('relayToApp', message);
+    console.log('relayToApp', message);
     switch (message.type) {
     case 'panel-shown':
       connectedAndOpen = true;
-      console.groupCollapsed('panel is shown, flushing messages');
-      for(const pending of pendingMessages) {
-        console.log(pending);
-        postMessage(pending);
-      }
-      console.groupEnd();
-      pendingMessages = [];
       break;
 
     case 'panel-hidden':
@@ -64,13 +54,12 @@ const connect = () => {
       break;
 
     default:
-      if (!message.wasQueued) {
-        window.dispatchEvent(new CustomEvent(DEVTOOL_TO_APP, {
-          detail: JSON.stringify(message),
-        }));
-      }
       break;
     }
+
+    window.dispatchEvent(new CustomEvent(DEVTOOL_TO_APP, {
+      detail: JSON.stringify(message),
+    }));
   };
 
   window.addEventListener(APP_TO_DEVTOOL, relayEventsToDevtool, false);
@@ -79,23 +68,11 @@ const connect = () => {
 
   port.onDisconnect.addListener((event) => {
     port = null;
-    pendingMessages = [];
-    log('onDisconnect', event);
+    console.log('onDisconnect', event);
     window.removeEventListener(APP_TO_DEVTOOL, relayEventsToDevtool);
     window.removeEventListener(APP_TO_PANEL, relayEventsToPanel);
     reconnect();
   });
 };
-
-function hyperappDevTool() {
-  return JSON.stringify({
-    events: {
-      APP_TO_DEVTOOL,
-      APP_TO_PANEL,
-      DEVTOOL_TO_APP,
-    },
-  });
-}
-exportFunction(hyperappDevTool, window, { defineAs: 'hyperappDevTool' }); // eslint-disable-line no-undef
 
 connect();
