@@ -1,6 +1,7 @@
 const log = (...args) => console.log('[background]', ...args);
 const ports = {};
 let queuedMessages = [];
+let appIdFilter = null;
 
 const getQueuedFor = (name) => {
   const messages = queuedMessages.filter(m => m.message.target === name);
@@ -15,20 +16,46 @@ const removeQueuedFor = (port) => {
   queuedMessages = queuedMessages.filter(m => m.port !== port);
 };
 
+// Fake background port to handle messages locally
+ports.background = {
+  postMessage: (message) => {
+    log('target=background', message);
+    if (message.type === 'setFilter') {
+      appIdFilter = message.appId;
+    }
+  },
+};
+
+// Message handlers
+const customMessageHandlers = {
+  devtool: (port, sendMessage, message) => {
+    const matchesFilter = appIdFilter && message.appId === appIdFilter;
+
+    if (message.type === 'dispatch' && !matchesFilter) {
+      return sendMessage({ ...message, target: port.name });
+    }
+    sendMessage(message);
+  },
+};
+
 chrome.runtime.onConnect.addListener((incomingPort) => {
   ports[incomingPort.name] = incomingPort;
   log('onConnect', incomingPort, { ports });
 
   const sendMessage = (message) => {
     const messagePorts = Object.keys(ports).filter(k => k.split('_')[0] === message.target);
-    log('sendMessage', message.target, messagePorts);
     if (!messagePorts.length) {
       return queuedMessages.push({
         port: incomingPort,
         message,
       });
     }
-    messagePorts.forEach(p => ports[p].postMessage(message));
+    messagePorts.forEach(p => {
+      log('sendMessage', p, ports[p]);
+      if (ports[p]) {
+        ports[p].postMessage(message)
+      }
+    });
   };
 
   const sendPending = () => {
@@ -44,7 +71,13 @@ chrome.runtime.onConnect.addListener((incomingPort) => {
   incomingPort.onMessage.addListener(async (message) => {
     log('onMessage', incomingPort.name, message);
     sendPending();
-    sendMessage(message);
+
+    const customHandler = customMessageHandlers[message.target];
+    if (!customHandler) {
+      return sendMessage(message);
+    }
+
+    customHandler(incomingPort, sendMessage, message);
   });
 
   incomingPort.onDisconnect.addListener(() => {

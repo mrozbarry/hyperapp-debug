@@ -21,7 +21,6 @@ export default app => (props) => {
       appName,
       id,
     };
-    console.log('emit', detail);
     const event = new CustomEvent(eventName, { detail });
     window.dispatchEvent(event);
   };
@@ -35,21 +34,8 @@ export default app => (props) => {
     emit(APP_TO_PANEL, type, message);
   };
 
-  const initConnection = (e) => {
-    console.log('initConnection');
-
-     emitPanelMessage('query');
-     emitDevtoolMessage('init');
-    // window.removeEventListener('$hyperapp-app-register', initConnection);
-  };
-
-  //window.addEventListener('$hyperapp-app-register', initConnection);
-  //emit('$hyperapp-app-register', 'register', {
-    //target: 'contentScript',
-    //appId,
-  //});
-
-  initConnection();
+  emitPanelMessage('query');
+  emitDevtoolMessage('init');
 
   let dispatchHistory = {};
   const middleware = originalDispatch => {
@@ -81,10 +67,7 @@ export default app => (props) => {
   };
 
   const onDevToolShown = () => {
-    emitDevtoolMessage('register', {
-      appId,
-      appName,
-    });
+    emitDevtoolMessage('register');
   };
 
   const devToolMessageHandler = {
@@ -113,8 +96,13 @@ export default app => (props) => {
     middleware,
   };
 
+  window.addEventListener('unload', () => {
+    emitDevtoolMessage('deregister');
+  });
+
   app(appSignature);
   return () => {
+    emitDevtoolMessage('deregister');
     cancelDevToolListener();
   };
 };

@@ -103,5 +103,6 @@ withDebug(app)({
     ],
   ],
   node: document.getElementById('app'),
+  debugName: 'Test Bed',
 });
 

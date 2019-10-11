@@ -14,6 +14,8 @@ const injectIntoArray = (arr, index, data) => {
 
 export const Init = () => {
   return {
+    apps: [],
+    debugApp: null,
     queue: [],
     streams: {
       action: [],
@@ -84,6 +86,47 @@ const mergeSubs = (subscription, eventIndex, data) => {
   }
 
   return subscription;
+};
+
+export const RegisterApp = (state, message) => {
+  const app = {
+    id: message.appId,
+    name: message.appName,
+  };
+  const wrap = state.apps.length === 0
+    ? state => DebugApp(state, { target: { value: app.id } })
+    : state => state;
+  return wrap({
+    ...state,
+    apps: state.apps.concat(app),
+  });
+};
+
+export const DeregisterApp = (state, message) => {
+  const apps = state.apps.filter(a => a.id !== message.appId);
+  const wrap = message.appId === state.debugApp
+    ? state => DebugApp(state, { target: {} })
+    : state => state;
+
+  return wrap({
+    ...state,
+    apps,
+  });
+};
+
+export const DebugApp = (state, event) => {
+  const debugApp = event.target.value;
+  return [
+    {
+      ...state,
+      debugApp,
+    },
+    effects.outgoingMessage({
+      target: 'background',
+      type: 'setFilter',
+      appId: debugApp,
+    }),
+  ];
 };
 
 export const ProcessDispatch = (state, message) => {

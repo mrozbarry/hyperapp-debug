@@ -1,16 +1,10 @@
 const APP_TO_DEVTOOL = '$hyperapp-app-to-devtool';
 const APP_TO_PANEL = '$hyperapp-app-to-panel';
 const DEVTOOL_TO_APP = '$hyperapp-devtool-to-app';
-const APP_REGISTER = '$hyperapp-app-register';
 
 const log = (...args) => console.log('[inject]', ...args);
 let port = null;
 let connectedAndOpen = false;
-let activeApps = {};
-
-const eachApp = (fn) => {
-  Object.keys(activeApps).forEach(fn);
-};
 
 const connect = () => {
   const reconnect = () => {
@@ -82,47 +76,3 @@ const connect = () => {
 };
 
 connect();
-//const appRegister = (event) => {
-  //const { appId, target: messageTarget } = event.detail.payload;
-  //if (messageTarget !== 'contentScript') {
-    //return;
-  //}
-  //const target = `app_${appId}`;
-  //const oldApp = activeApps[appId];
-  //if (!appId || oldApp) {
-    //console.log('rejecting register', event.detail);
-    //window.dispatchEvent(new CustomEvent(APP_REGISTER, {
-      //detail: JSON.stringify({
-        //target,
-        //type: 'failed',
-        //events: {
-          //APP_TO_DEVTOOL,
-          //APP_TO_PANEL,
-          //DEVTOOL_TO_APP,
-        //},
-      //}),
-    //}));
-  //} else {
-    //console.log('accepting register', event.detail);
-    //window.dispatchEvent(new CustomEvent(APP_REGISTER, {
-      //detail: JSON.stringify({
-        //target,
-        //type: 'success',
-        //events: {
-          //APP_TO_DEVTOOL,
-          //APP_TO_PANEL,
-          //DEVTOOL_TO_APP,
-        //},
-      //}),
-    //}));
-
-    //activeApps[appId] = {
-      //pendingMessages: [],
-    //};
-
-    //if (!port) {
-      //connect();
-    //}
-  //}
-//};
-//window.addEventListener(APP_REGISTER, appRegister, false);

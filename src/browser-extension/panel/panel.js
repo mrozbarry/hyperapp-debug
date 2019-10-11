@@ -30,6 +30,8 @@ document.addEventListener('DOMContentLoaded', () => {
     'dispatch': actions.ProcessDispatch,
     'subscriptions': actions.CommitDispatch,
     'init': actions.Init,
+    'register': actions.RegisterApp,
+    'deregister': actions.DeregisterApp,
   };
   app({
     init: actions.Init,
@@ -60,15 +62,27 @@ document.addEventListener('DOMContentLoaded', () => {
         ? effect.props
         : {};
 
+      const appList = [
+        ...state.apps,
+        // { name: 'Fake', id: '000-000' },
+      ];
+
       return h('body', null, [
         h('article', { class: 'layout' }, [
           h('section', { class: 'layout-events' }, [
             h('article', { class: 'controls' }, [
-                ...quickControls({
-                  inspectedEventIndex: eventIndex,
-                  eventIndex: eventLength,
-                  isPaused: state.isPaused,
-                }),
+              ...quickControls({
+                inspectedEventIndex: eventIndex,
+                eventIndex: eventLength,
+                isPaused: state.isPaused,
+              }),
+              h('select', {
+                onchange: actions.DebugApp,
+              }, appList.map(app => h(
+                'option',
+                { value: app.id },
+                app.name
+              ))),
             ]),
             h('div', { class: 'stream-container' },
               h('section', {

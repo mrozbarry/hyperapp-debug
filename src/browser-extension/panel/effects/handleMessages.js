@@ -9,6 +9,7 @@ const HandleMessages = (dispatch, { events, isPaused }) => {
 
     const actionKey = keys.find(k => events[k]);
     let action = events[actionKey];
+    console.log('HandleMessages.onMessage', actionKey, action);
 
     if (!isPaused && action) {
       return dispatch(action, message);
