@@ -131,7 +131,7 @@ export const CommitDispatch = (state, { payload }) => {
       queue: [],
       streams,
     },
-    effects.scrollEventsTo({ eventIndex }),
+    effects.scrollEventsTo({ eventIndex, animate: false }),
   ];
 };
 
@@ -149,7 +149,7 @@ export const InspectEventIndex = (state, inspectedEventIndex) => {
       isPaused: true,
     },
     [
-      effects.scrollEventsTo({ eventIndex: inspectedEventIndex }),
+      effects.scrollEventsTo({ eventIndex: inspectedEventIndex, animate: true }),
       effects.outgoingMessage({
         type: 'dispatch',
         payload: commit.payload,

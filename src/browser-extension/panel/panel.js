@@ -5,8 +5,14 @@ import { quickControls } from './components/quickControls.js';
 import currentEventIndex from './helpers/currentEventIndex.js';
 import * as jsonView from './jsonView.js';
 
-const basicEvent = (event) => event && h('div', { class: 'event' }, [
+const basicEvent = (event, type) => event && h('div', {
+  class: {
+    'event': true,
+    [`event-${type}`]: true,
+  },
+}, [
   h('span', null, event.label),
+  h('div', { class: 'event-type' }, type),
 ]);
 
 const translateInspectableObject = (object) => {
@@ -69,7 +75,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 class: 'stream',
                 style: {
                   //gridTemplateColumns: `repeat(${iter.length}, 130px)`,
-                  gridTemplateRows: `repeat(${2 + subs.length}, 32px)`,
+                  gridTemplateRows: `repeat(${2 + subs.length}, 38px)`,
                 },
               },
               iter.reduce((elements, _, index) => {
@@ -90,7 +96,7 @@ document.addEventListener('DOMContentLoaded', () => {
                       gridColumnStart: index + 1,
                       gridRowStart: 1,
                     },
-                  }, basicEvent(action)),
+                  }, basicEvent(action, 'action')),
 
                   effect && h('div', {
                     class: 'stream-item',
@@ -98,7 +104,7 @@ document.addEventListener('DOMContentLoaded', () => {
                       gridColumnStart: index + 1,
                       gridRowStart: 2,
                     },
-                  }, basicEvent(effect)),
+                  }, basicEvent(effect, 'effect')),
 
                   ...subscriptions.map((subscription, subIndex) => (
                     subscription && h('div', {
@@ -108,7 +114,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         gridColumnEnd: index + 1 + (subscription.ended ? subscription.timeSlices : (eventLength - index + 1)),
                         gridRowStart: 3 + subIndex,
                       },
-                    }, basicEvent(subscription))
+                    }, basicEvent(subscription, 'subscription'))
                   )),
                 ];
               }, [])),

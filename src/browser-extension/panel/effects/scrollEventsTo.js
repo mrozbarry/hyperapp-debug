@@ -1,8 +1,8 @@
 let handle = null;
-const ScrollEventsTo = (_dispatch, { eventIndex }) => {
+const ScrollEventsTo = (_dispatch, { eventIndex, animate }) => {
   clearTimeout(handle);
   handle = setTimeout(() => {
-    const target = document.querySelector(`.layout-events`);
+    const target = document.querySelector('.layout-events .stream-container');
     if (!target) {
       return;
     }
@@ -10,9 +10,9 @@ const ScrollEventsTo = (_dispatch, { eventIndex }) => {
     target.scrollTo({
       left, // : target.scrollWidth,
       top: 0,
-      behavior: 'smooth',
+      behavior: animate ? 'smooth' : 'auto',
     });
   }, 50);
-}
+};
 
 export const scrollEventsTo = props => [ScrollEventsTo, props];

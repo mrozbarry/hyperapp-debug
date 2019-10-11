@@ -5,6 +5,7 @@ body {
   padding: 0;
   margin: 0;
   height: 100vh;
+  width: 100%;
 }
 
 body * {
@@ -16,14 +17,13 @@ body * {
   flex-direction: row;
   align-items: flex-start;
   justify-content: flex-start;
-  width: 100vw;
+  width: 100%;
   height: 100%;
 }
 
 .layout-events {
-  flex: 1;
-  width: calc(100vw - 400px);
-  overflow-x: auto;
+  flex: 1 1 calc(100% - 400px);
+  max-width: calc(100% - 400px);
 }
 
 .layout-events .controls {
@@ -31,9 +31,10 @@ body * {
 }
 
 .layout-inspector {
-  flex: 1;
+  flex: 0 0 400px;
   /* width: 400px; */
-  max-width: 400px;
+  min-width: 400px;
+  width: 400px;
   border-left: 1px #efefef solid;
   overflow: auto;
   padding: 4px;
@@ -49,8 +50,9 @@ body * {
   background-color: lightblue;
   margin: 0;
   padding: 0;
-  overflow: auto;
+  overflow-x: auto;
   position: relative;
+  width: 100%;
 }
 
 /* .stream-cursor { */
@@ -69,7 +71,7 @@ body * {
   min-width: 0;
   margin: 0;
   padding: 8px;
-  grid-gap: 8px;
+  grid-gap: 0;
 }
 
 .stream-item {
@@ -89,10 +91,11 @@ body * {
   flex-direction: row;
   align-items: center;
   justify-content: center;
+  border: 2px transparent solid;
 }
 
 .stream-item--active {
-  outline: 3px white solid;
+  border: 2px white solid;
 }
 
 .event {
@@ -102,6 +105,34 @@ body * {
   background-color: rgba(0, 0, 0, 0.1);
   height: 100%;
   width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  color: white;
+}
+
+.event .event-type {
+  color: #bbb;
+  font-size: 0.7rem;
+  font-variant: small-caps;
+}
+
+.event-action {
+  background-color: purple;
+  color: white;
+}
+
+.event-effect {
+  background-color: green;
+}
+
+.event-subscription {
+  background-color: orange;
+}
+
+.event-subscription .event-type {
+  color: #eee;
 }
 
 button.button {
@@ -119,12 +150,16 @@ button.button:disabled {
 @media (max-width: 800px) {
   .layout {
     display: block;
-    width: 100vw;
+    width: 100%;
     height: 100vh;
   }
 
   .layout-events {
+    max-width: 100%;
+    min-width: auto;
     width: 100%;
+    flex: 0;
+    overflow: auto;
   }
 
   .layout-inspector {

@@ -24,26 +24,26 @@ export const makeSubStopEvent = ([effect, props]) => ({ type: 'subscription/stop
 
 export const makeEvents = (action, props) => {
   switch (typeOfAction(action)) {
-    case 'action':
-      return [
-        makeActionEvent(action, props),
-      ];
+  case 'action':
+    return [
+      makeActionEvent(action, props),
+    ];
 
-    case 'commit':
-      return [
-        makeCommitEvent(action),
-      ];
+  case 'commit':
+    return [
+      makeCommitEvent(action),
+    ];
 
-    case 'effect':
-      return [
-        ...makeEffectEvents(action),
-      ];
+  case 'effect':
+    return [
+      ...makeEffectEvents(action),
+    ];
 
-    case 'commit+effect':
-      return [
-        ...makeEvents(action[0]),
-        ...makeEvents(action[1]),
-      ];
+  case 'commit+effect':
+    return [
+      ...makeEvents(action[0]),
+      ...makeEvents(action[1]),
+    ];
   }
 }
 

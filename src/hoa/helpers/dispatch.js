@@ -1,4 +1,5 @@
 const functionMap = {};
+
 const functionMapAdd = (parent, fn) => {
   if (!fn.name) {
     console.warn('Encountered an illegal anonymous method used as an action or effect');

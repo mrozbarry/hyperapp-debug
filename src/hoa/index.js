@@ -35,8 +35,21 @@ export default app => (props) => {
     emit(APP_TO_PANEL, type, message);
   };
 
-  emitPanelMessage('query');
-  emitDevtoolMessage('init');
+  const initConnection = (e) => {
+    console.log('initConnection');
+
+     emitPanelMessage('query');
+     emitDevtoolMessage('init');
+    // window.removeEventListener('$hyperapp-app-register', initConnection);
+  };
+
+  //window.addEventListener('$hyperapp-app-register', initConnection);
+  //emit('$hyperapp-app-register', 'register', {
+    //target: 'contentScript',
+    //appId,
+  //});
+
+  initConnection();
 
   let dispatchHistory = {};
   const middleware = originalDispatch => {

@@ -1,3 +1,4 @@
+const log = (...args) => console.log('[background]', ...args);
 const ports = {};
 let queuedMessages = [];
 
@@ -16,17 +17,18 @@ const removeQueuedFor = (port) => {
 
 chrome.runtime.onConnect.addListener((incomingPort) => {
   ports[incomingPort.name] = incomingPort;
-  console.log('onConnect', incomingPort, { ports });
+  log('onConnect', incomingPort, { ports });
 
   const sendMessage = (message) => {
-    const port = ports[message.target];
-    if (!port) {
+    const messagePorts = Object.keys(ports).filter(k => k.split('_')[0] === message.target);
+    log('sendMessage', message.target, messagePorts);
+    if (!messagePorts.length) {
       return queuedMessages.push({
-        port,
+        port: incomingPort,
         message,
       });
     }
-    port.postMessage(message);
+    messagePorts.forEach(p => ports[p].postMessage(message));
   };
 
   const sendPending = () => {
@@ -40,13 +42,13 @@ chrome.runtime.onConnect.addListener((incomingPort) => {
   sendPending();
 
   incomingPort.onMessage.addListener(async (message) => {
-    console.log('onMessage', incomingPort.name, message);
+    log('onMessage', incomingPort.name, message);
     sendPending();
     sendMessage(message);
   });
 
   incomingPort.onDisconnect.addListener(() => {
-    console.log('onDisconnect', incomingPort.name);
+    log('onDisconnect', incomingPort.name);
     removeQueuedFor(incomingPort);
     if (ports[incomingPort.name] === incomingPort) {
       ports[incomingPort.name] = null;
