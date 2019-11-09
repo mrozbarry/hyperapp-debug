@@ -29,9 +29,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const eventHandlers = {
     'dispatch': actions.ProcessDispatch,
     'subscriptions': actions.CommitDispatch,
-    'init': actions.Init,
-    'register': actions.RegisterApp,
-    'deregister': actions.DeregisterApp,
+    //'init': actions.Init,
+    'registrations': actions.SetRegistrations,
+    'import': actions.ImportDispatches,
   };
   app({
     init: actions.Init,
@@ -80,8 +80,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 onchange: actions.DebugApp,
               }, appList.map(app => h(
                 'option',
-                { value: app.id },
-                app.name
+                { value: app.appId },
+                app.appName
               ))),
             ]),
             h('div', { class: 'stream-container' },

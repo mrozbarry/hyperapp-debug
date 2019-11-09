@@ -12,9 +12,14 @@ const injectIntoArray = (arr, index, data) => {
   return arr;
 };
 
+const setAppsState = (apps) => [
+  { appId: null, appName: '<Not Debugging>' },
+  ...apps,
+];
+
 export const Init = () => {
   return {
-    apps: [],
+    apps: setAppsState([]),
     debugApp: null,
     queue: [],
     streams: {
@@ -88,56 +93,55 @@ const mergeSubs = (subscription, eventIndex, data) => {
   return subscription;
 };
 
-export const RegisterApp = (state, message) => {
-  const app = {
-    id: message.appId,
-    name: message.appName,
+export const SetRegistrations = (state, message) => {
+  const apps = setAppsState(message.payload);
+  const debugApp = apps.some(a => a.appId === state.debugApp)
+    ? state.debugApp
+    : null;
+
+  return {
+    ...state,
+    apps: setAppsState(message.payload),
+    debugApp,
   };
-  const wrap = state.apps.length === 0
-    ? state => DebugApp(state, { target: { value: app.id } })
-    : state => state;
-  return wrap({
-    ...state,
-    apps: state.apps.filter(a => a.id !== app.id).concat(app),
-  });
-};
-
-export const DeregisterApp = (state, message) => {
-  const apps = state.apps.filter(a => a.id !== message.appId);
-  const wrap = message.appId === state.debugApp
-    ? state => DebugApp(state, { target: {} })
-    : state => state;
-
-  return wrap({
-    ...state,
-    apps,
-  });
 };
 
 export const DebugApp = (state, event) => {
   const debugApp = event.target.value;
+
+  const baseState = !debugApp ? Init() : state;
+
   return [
     {
-      ...Init(),
+      ...baseState,
       apps: state.apps,
+      debugApp,
     },
-    [
-      effects.outgoingMessage({
-        target: 'background',
-        type: 'setFilter',
-        appId: debugApp,
-      }),
-      effects.outgoingMessage({
-        target: 'app',
-        type: 'history',
-        appId: debugApp,
-      }),
-    ],
+    effects.outgoingMessage({
+      appId: debugApp,
+      type: 'use',
+      payload: {},
+    }),
   ];
+};
+
+export const ImportDispatches = (state, message) => {
+  return message.payload.reduce((nextState, { id, type, payload }) => {
+    return type === 'dispatch'
+      ? ProcessDispatch(nextState, { id, appId: state.debugApp, type, payload })[0]
+      : CommitDispatch(nextState, { id, appId: state.debugApp, type, payload })[0];
+  }, {
+    ...Init(),
+    apps: state.apps,
+    debugApp: state.debugApp,
+  });
 };
 
 export const ProcessDispatch = (state, message) => {
   const { payload, appId, id, type, wasQueued } = message;
+  if (appId !== state.debugApp) {
+    return state;
+  }
   return [
     {
       ...state,
@@ -153,7 +157,10 @@ export const ProcessDispatch = (state, message) => {
   ];
 };
 
-export const CommitDispatch = (state, { payload }) => {
+export const CommitDispatch = (state, { appId, payload }) => {
+  if (appId !== state.debugApp) {
+    return state;
+  }
   // console.log('CommitDispatch', 'queue', state.queue);
   const items = state.queue.reduce((nextItems, event) => {
     return {

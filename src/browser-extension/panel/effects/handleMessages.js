@@ -15,7 +15,7 @@ const HandleMessages = (dispatch, { events, isPaused }) => {
       return dispatch(action, message);
     }
 
-    console.warn('onMessage', 'unhandled', { isPaused }, message);
+    console.warn('onMessage', 'unhandled', { isPaused, events, action, keys }, message);
   };
 
   const connect = () => {
