@@ -1,27 +1,30 @@
-const log = (...args) => console.log('[background]', ...args);
+// const log = (...args) => console.log('[background]', ...args);
 const ports = {};
-let queuedMessages = [];
 let appIdFilter = null;
+let messageHistory = {};
 
-const getQueuedFor = (name) => {
-  const messages = queuedMessages.filter(m => m.message.target === name);
-  return messages;
-};
+//const getQueuedFor = (name) => {
+  //const messages = queuedMessages.filter(m => m.message.target === name);
+  //return messages;
+//};
 
-const removeQueued = (item) => {
-  queuedMessages = queuedMessages.filter(m => m !== item);
-};
+//const removeQueued = (item) => {
+  //queuedMessages = queuedMessages.filter(m => m !== item);
+//};
 
-const removeQueuedFor = (port) => {
-  queuedMessages = queuedMessages.filter(m => m.port !== port);
-};
+//const removeQueuedFor = (port) => {
+  //queuedMessages = queuedMessages.filter(m => m.port !== port);
+//};
 
 // Fake background port to handle messages locally
 ports.background = {
   postMessage: (message) => {
-    log('target=background', message);
+    // log('target=background', message);
     if (message.type === 'setFilter') {
       appIdFilter = message.appId;
+
+      const appHistory = (messageHistory.app || []).filter(m => m.appId === appIdFilter);
+      appHistory.forEach(m => ports.devtool.postMessage(m));
     }
   },
 };
@@ -40,37 +43,34 @@ const customMessageHandlers = {
 
 chrome.runtime.onConnect.addListener((incomingPort) => {
   ports[incomingPort.name] = incomingPort;
-  log('onConnect', incomingPort, { ports });
+  // log('onConnect', incomingPort, { ports });
 
   const sendMessage = (message) => {
+    if (message.target === 'devtool' && !ports.devtool) {
+      return incomingPort.postMessage(message);
+    }
     const messagePorts = Object.keys(ports).filter(k => k.split('_')[0] === message.target);
     if (!messagePorts.length) {
-      return queuedMessages.push({
-        port: incomingPort,
-        message,
-      });
+      return; // TODO? Anything?
+      // return queuedMessages.push({
+      //   port: incomingPort,
+      //   message,
+      // });
     }
     messagePorts.forEach(p => {
-      log('sendMessage', p, ports[p]);
+      // log('sendMessage', p, ports[p]);
       if (ports[p]) {
         ports[p].postMessage(message)
       }
     });
   };
 
-  const sendPending = () => {
-    const pendingMessages = getQueuedFor(incomingPort.name);
-    for (const msg of pendingMessages) {
-      sendMessage(msg.message);
-      removeQueued(msg);
-    }
-  };
-
-  sendPending();
-
   incomingPort.onMessage.addListener(async (message) => {
-    log('onMessage', incomingPort.name, message);
-    sendPending();
+    if (incomingPort.name === 'app' && message.type === 'dispatch') {
+      messageHistory[message.appId] = messageHistory[message.appId] || [];
+      messageHistory[message.appId].push(message);
+    }
+
 
     const customHandler = customMessageHandlers[message.target];
     if (!customHandler) {
@@ -81,8 +81,8 @@ chrome.runtime.onConnect.addListener((incomingPort) => {
   });
 
   incomingPort.onDisconnect.addListener(() => {
-    log('onDisconnect', incomingPort.name);
-    removeQueuedFor(incomingPort);
+    // log('onDisconnect', incomingPort.name);
+    // removeQueuedFor(incomingPort);
     if (ports[incomingPort.name] === incomingPort) {
       ports[incomingPort.name] = null;
     }

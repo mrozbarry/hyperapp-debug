@@ -60,10 +60,16 @@ const testCase = ({ title, description }, children) => h('section', null, [
   ]),
 ]);
 
-withDebug(app)({
+const mount = (debugName, node) => withDebug(app)({
   init: Init,
-  view: state => h('article', null, [
-    h('h1', null, 'Hyperapp Debug Testbed'),
+  view: state => h('article', {
+    style: {
+      paddingBottom: '0.5rem',
+      marginBottom: '0.5rem',
+      borderBottom: '1px #eee solid',
+    },
+  }, [
+    h('h1', null, debugName),
 
     testCase({
       title: 'Basic Counter',
@@ -102,7 +108,11 @@ withDebug(app)({
       ]
     ],
   ],
-  node: document.getElementById('app'),
-  debugName: 'Test Bed',
+  node,
+  debugName,
 });
+
+mount('Test Bed 1', document.getElementById('app1'))
+mount('Test Bed 2', document.getElementById('app2'))
+mount('Test Bed 3', document.getElementById('app3'))
 

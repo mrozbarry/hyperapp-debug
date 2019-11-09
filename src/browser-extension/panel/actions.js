@@ -98,7 +98,7 @@ export const RegisterApp = (state, message) => {
     : state => state;
   return wrap({
     ...state,
-    apps: state.apps.concat(app),
+    apps: state.apps.filter(a => a.id !== app.id).concat(app),
   });
 };
 
@@ -118,14 +118,21 @@ export const DebugApp = (state, event) => {
   const debugApp = event.target.value;
   return [
     {
-      ...state,
-      debugApp,
+      ...Init(),
+      apps: state.apps,
     },
-    effects.outgoingMessage({
-      target: 'background',
-      type: 'setFilter',
-      appId: debugApp,
-    }),
+    [
+      effects.outgoingMessage({
+        target: 'background',
+        type: 'setFilter',
+        appId: debugApp,
+      }),
+      effects.outgoingMessage({
+        target: 'app',
+        type: 'history',
+        appId: debugApp,
+      }),
+    ],
   ];
 };
 
@@ -147,7 +154,7 @@ export const ProcessDispatch = (state, message) => {
 };
 
 export const CommitDispatch = (state, { payload }) => {
-  console.log('CommitDispatch', 'queue', state.queue);
+  // console.log('CommitDispatch', 'queue', state.queue);
   const items = state.queue.reduce((nextItems, event) => {
     return {
       ...nextItems,
@@ -166,7 +173,7 @@ export const CommitDispatch = (state, { payload }) => {
     ), state.streams.subscription),
   };
 
-  console.log('CommitDispatch', streams);
+  // console.log('CommitDispatch', streams);
 
   return [
     {

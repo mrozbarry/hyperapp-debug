@@ -9,13 +9,13 @@ const HandleMessages = (dispatch, { events, isPaused }) => {
 
     const actionKey = keys.find(k => events[k]);
     let action = events[actionKey];
-    console.log('HandleMessages.onMessage', actionKey, action);
+    // console.log('HandleMessages.onMessage', actionKey, action);
 
     if (!isPaused && action) {
       return dispatch(action, message);
     }
 
-    console.log('onMessage', 'unhandled', { isPaused }, message);
+    console.warn('onMessage', 'unhandled', { isPaused }, message);
   };
 
   const connect = () => {
@@ -23,14 +23,14 @@ const HandleMessages = (dispatch, { events, isPaused }) => {
     port.onMessage.addListener(onMessage);
     port.onDisconnect.addListener((e) => {
       port = null;
-      console.log('HandleMessages.sub', 'port disconnected', e);
+      // console.log('HandleMessages.sub', 'port disconnected', e);
       setTimeout(connect, 1);
     });
-    console.log('HandleMessage.sub.init', 'port listening');
+    // console.log('HandleMessage.sub.init', 'port listening');
   };
 
   const onRelayEvent = (event) => {
-    console.log('HandleMessages.onRelayEvent', event);
+    // console.log('HandleMessages.onRelayEvent', event);
     const message = event.detail;
     port.postMessage(message);
   };
