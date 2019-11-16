@@ -95,15 +95,29 @@ const mergeSubs = (subscription, eventIndex, data) => {
 
 export const SetRegistrations = (state, message) => {
   const apps = setAppsState(message.payload);
-  const debugApp = apps.some(a => a.appId === state.debugApp)
+  const isCurrentAppRegistered = state.debugApp && apps.some(a => a.appId === state.debugApp);
+  const getDebugAppFromMessage = () => {
+    return message.payload.length > 0
+      ? message.payload[0].appId
+      : null;
+  }
+  const debugApp = isCurrentAppRegistered
     ? state.debugApp
-    : null;
+    : getDebugAppFromMessage();
 
-  return {
-    ...state,
+  const baseState = debugApp === state.debugApp
+    ? state 
+    : Init();
+
+  const stateUpdate = {
+    ...baseState,
     apps: setAppsState(message.payload),
     debugApp,
   };
+
+  return debugApp === state.debugApp
+    ? stateUpdate
+    : DebugApp(stateUpdate, { target: { value: debugApp } });
 };
 
 export const DebugApp = (state, event) => {
@@ -126,7 +140,6 @@ export const DebugApp = (state, event) => {
 };
 
 export const ImportDispatches = (state, message) => {
-  console.log('ImportDispatches', { state, message });
   return message.payload.reduce((nextState, { id, type, payload }) => {
     return type === 'dispatch'
       ? ProcessDispatch(nextState, { id, appId: state.debugApp, type, payload })[0]
@@ -162,7 +175,6 @@ export const CommitDispatch = (state, { appId, payload }) => {
   if (appId !== state.debugApp) {
     return state;
   }
-  // console.log('CommitDispatch', 'queue', state.queue);
   const items = state.queue.reduce((nextItems, event) => {
     return {
       ...nextItems,
@@ -181,8 +193,6 @@ export const CommitDispatch = (state, { appId, payload }) => {
     ), state.streams.subscription),
   };
 
-  // console.log('CommitDispatch', streams);
-
   return [
     {
       ...state,
@@ -194,7 +204,6 @@ export const CommitDispatch = (state, { appId, payload }) => {
 };
 
 export const InspectEventIndex = (state, inspectedEventIndex) => {
-  // console.log('InspectEventIndex', { state, inspectedEventIndex });
   const commit = state.streams.commit[inspectedEventIndex];
   if (!commit) {
     return state;
