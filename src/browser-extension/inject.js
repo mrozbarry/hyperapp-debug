@@ -17,7 +17,6 @@ const connect = () => {
   };
 
   const relayEventsToApp = (message) => {
-    console.log('inject#relayEventsToApp', message);
     window.dispatchEvent(new CustomEvent(eventName, {
       detail: JSON.stringify(message),
     }));

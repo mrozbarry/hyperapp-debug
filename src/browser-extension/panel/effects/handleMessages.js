@@ -21,7 +21,7 @@ const HandleMessages = (dispatch, { events, isPaused }) => {
   const connect = () => {
     port = chrome.runtime.connect({ name: 'devtool' });
     port.onMessage.addListener(onMessage);
-    port.onDisconnect.addListener((e) => {
+    port.onDisconnect.addListener(() => {
       port = null;
       // console.log('HandleMessages.sub', 'port disconnected', e);
       setTimeout(connect, 1);

@@ -15,7 +15,6 @@ export default app => (props) => {
 
   const addImportHistory = (id, type, payload) => {
     if (dispatchHistory[id]) {
-      console.log('skipping history add, already in dispatchHistory', id);
       return;
     }
     const item = {
@@ -25,15 +24,12 @@ export default app => (props) => {
       payload,
     };
     importHistory.push(item);
-    console.log('adding import history', { item });
-
   };
 
   const middleware = originalDispatch => {
     dispatch = originalDispatch;
 
     return (action, props) => {
-      console.log('Running dispatch', { action, props });
       const serialized = dispatchHelper.serialize(action, props);
       const id = bridge.emit('dispatch', serialized);
       addImportHistory(id, 'dispatch', serialized);
@@ -53,7 +49,6 @@ export default app => (props) => {
 
   const onDevToolUse = (message) => {
     isBeingDebugged = message.appId === appId;
-    console.log(`${message.payload.appName} (${message.appId}) is now being debugged`, { isBeingDebugged, appId });
     if (isBeingDebugged) {
       bridge.emit('import', importHistory);
     }
@@ -69,7 +64,6 @@ export default app => (props) => {
     if (!handler) {
       return console.warn('no handler for', message.type, message);
     }
-    console.log('hoa.bridge.listen', handler, message);
     handler(message);
   });
 

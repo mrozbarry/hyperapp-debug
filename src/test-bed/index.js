@@ -61,7 +61,7 @@ const testCase = ({ title, description }, children) => h('section', null, [
 ]);
 
 const mount = (debugName, node) => withDebug(app)({
-  init: Init,
+  init: Init(),
   view: state => h('article', {
     style: {
       paddingBottom: '0.5rem',
