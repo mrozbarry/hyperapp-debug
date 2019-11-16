@@ -5,7 +5,6 @@ let appChangeFn = () => {};
 const connect = () => {
   try {
     port = chrome.runtime.connect({ name: 'panel' });
-    console.log('connected', port);
   } catch (err) {
     console.log(err);
     return setTimeout(connect, 100);
@@ -44,6 +43,7 @@ const connect = () => {
             payload: [...registeredApps],
           });
         };
+        appChangeFn();
       });
 
       panel.onHidden.addListener(() => {
