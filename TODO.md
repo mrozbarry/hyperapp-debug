@@ -54,8 +54,11 @@ Messages are (mostly) serialized from dispatch calls, which take the form of `(a
      - If devtool panel is opened
      - If devtool app has picked the app id
    - [x] Route all dispatches through to devtool
-   - [ ] Why is the panel not showing the Init action?
+   - [x] Why is the panel not showing the Init action?
+     - Was not storing subscriptions because app wasn't being debugged yet
+ - [ ] Submit registation on panel open+active
  - [ ] Allow user to specify custom bridge, default to devtool
+
    - Future: add window.open variant of devtool
  - [ ] Improve communication bridge
    - [ ]

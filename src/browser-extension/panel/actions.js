@@ -126,6 +126,7 @@ export const DebugApp = (state, event) => {
 };
 
 export const ImportDispatches = (state, message) => {
+  console.log('ImportDispatches', { state, message });
   return message.payload.reduce((nextState, { id, type, payload }) => {
     return type === 'dispatch'
       ? ProcessDispatch(nextState, { id, appId: state.debugApp, type, payload })[0]

@@ -113,6 +113,6 @@ const mount = (debugName, node) => withDebug(app)({
 });
 
 mount('Test Bed 1', document.getElementById('app1'))
-mount('Test Bed 2', document.getElementById('app2'))
-mount('Test Bed 3', document.getElementById('app3'))
+//mount('Test Bed 2', document.getElementById('app2'))
+//mount('Test Bed 3', document.getElementById('app3'))
 

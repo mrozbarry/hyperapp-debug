@@ -75,10 +75,8 @@ export default app => (props) => {
 
 
   const subscriptions = subscriptionHelper.wrap(props.subscriptions, (subEvents) => {
-    if (isBeingDebugged) {
-      const id = bridge.emit('subscriptions', subEvents);
-      addImportHistory(id, 'subscriptions', subEvents);
-    }
+    const id = bridge.emit('subscriptions', subEvents);
+    addImportHistory(id, 'subscriptions', subEvents);
   });
 
   const appSignature = {
