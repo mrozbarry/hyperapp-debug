@@ -12,7 +12,10 @@ const basicEvent = (event, type) => event && h('div', {
   },
 }, [
   h('span', null, event.label),
-  h('div', { class: 'event-type' }, type),
+  h('div', { class: 'event-type' }, [
+    event.faked ? 'Generated ' : '',
+    type
+  ]),
 ]);
 
 const translateInspectableObject = (object) => {
@@ -67,6 +70,13 @@ document.addEventListener('DOMContentLoaded', () => {
         // { name: 'Fake', id: '000-000' },
       ];
 
+      const getAction = index => {
+        if (index === 0 && !state.streams.action[index]) {
+          return { label: 'Init', faked: true };
+        }
+        return state.streams.action[index];
+      }
+
       return h('body', null, [
         h('article', { class: 'layout' }, [
           h('section', { class: 'layout-events' }, [
@@ -80,7 +90,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 onchange: actions.DebugApp,
               }, appList.map(app => h(
                 'option',
-                { value: app.appId },
+                { value: app.appId, selected: app.appId === state.debugApp },
                 app.appName
               ))),
             ]),
@@ -93,7 +103,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 },
               },
               iter.reduce((elements, _, index) => {
-                const action = state.streams.action[index];
+                const action = getAction(index);
                 const effect = state.streams.effect[index];
                 const subscriptions = subs.map(subName => (
                   state.streams.subscription[subName][index]
