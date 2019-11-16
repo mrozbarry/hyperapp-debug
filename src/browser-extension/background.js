@@ -1,50 +1,43 @@
 const ports = {};
-let messageHistory = {};
 
-// Message handlers
-const customMessageHandlers = {
-  devtool: (port, sendMessage, message) => {
-    sendMessage(message);
-  },
+let pendingPanelMessages = [];
+
+const queueMessage = (message) => {
+  if (message.target !== 'panel') {
+    return;
+  }
+  pendingPanelMessages.push(message);
 };
+
+const dequeueMessages = (port) => {
+  if (port.name !== 'panel') {
+    return;
+  }
+  if (pendingPanelMessages.length === 0) {
+    return;
+  }
+  for(const m of pendingPanelMessages) {
+    port.postMessage(m);
+  }
+  pendingPanelMessages = [];
+};
+
 
 chrome.runtime.onConnect.addListener((incomingPort) => {
   ports[incomingPort.name] = incomingPort;
-  // log('onConnect', incomingPort, { ports });
+  dequeueMessages(incomingPort);
 
   const sendMessage = (message) => {
-    if (message.target === 'devtool' && !ports.devtool) {
-      return incomingPort.postMessage(message);
+    const port = ports[message.target];
+    if (port) {
+      port.postMessage(message);
+    } else {
+      queueMessage(message);
     }
-    const messagePorts = Object.keys(ports).filter(k => k.split('_')[0] === message.target);
-    if (!messagePorts.length) {
-      return; // TODO? Anything?
-      // return queuedMessages.push({
-      //   port: incomingPort,
-      //   message,
-      // });
-    }
-    messagePorts.forEach(p => {
-      // log('sendMessage', p, ports[p]);
-      if (ports[p]) {
-        ports[p].postMessage(message);
-      }
-    });
   };
 
   incomingPort.onMessage.addListener(async (message) => {
-    if (incomingPort.name === 'app' && message.type === 'dispatch') {
-      messageHistory[message.appId] = messageHistory[message.appId] || [];
-      messageHistory[message.appId].push(message);
-    }
-
-
-    const customHandler = customMessageHandlers[message.target];
-    if (!customHandler) {
-      return sendMessage(message);
-    }
-
-    customHandler(incomingPort, sendMessage, message);
+    return sendMessage(message);
   });
 
   incomingPort.onDisconnect.addListener(() => {
