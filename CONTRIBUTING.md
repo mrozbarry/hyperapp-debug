@@ -32,7 +32,12 @@ Language and versions in use
 * Before submitting a bug report, search the issues for similar tickets. Your issue may have already been discussed and resolved. Feel free to add a comment to an existing ticket, even if it's closed.
 * If you have a question or need help with something you are building, hop on [Slack](https://hyperappjs.herokuapp.com) and go to the #hyperapp-debug channel.
 * Be thorough in your title and report, don't leave out important details, describe your setup and [include any relevant code](https://en.wikipedia.org/wiki/Minimal_Working_Example) with your issue.
-* Please use GitHub [fenced code blocks](https://help.github.com/articles/creating-and-highlighting-code-blocks/) when sharing code. If your code has JSX in it, use <samp>```jsx</samp> for best syntax highlighting.
+* Please use GitHub [fenced code blocks](https://help.github.com/articles/creating-and-highlighting-code-blocks/) when sharing code. If your code has JSX in it, use
+<samp>
+```jsx
+// Your code with JSX here
+```
+</samp> for best syntax highlighting.
 
 ## Tests
 
@@ -41,3 +46,25 @@ Language and versions in use
 ## Attribution
 
 This document was originally from [Hyperapp v1's contributing guidelines](https://github.com/jorgebucaran/hyperapp/blob/V1/CONTRIBUTING.md), with modification.
+
+## Running the debugger locally
+
+### With web-ext
+
+```bash
+yarn
+yarn start
+```
+
+Also open a tab in the new Firefox instance to [about:debugging](about:debugging), click `This Firefox`, and then click the `Inspect` button for the Hyperapp dev tools extension.
+The testbed app is meant to have minimal real-world-ish examples, and should be extended when there are missing use-cases.
+
+### Without web-ext
+
+In chrome, enable developer mode and load an unpacked extension, which ends up being [manifest.json](./src/browser-extension/manifest.json).
+In firefox, open a tab in the new Firefox instance to [about:debugging](about:debugging), click `This Firefox`, and then click `Load Temporary Add-ons...`, and pick [manifest.json](./src/browser-extension/manifest.json).
+
+```bash
+yarn
+yarn start:testbed
+```
