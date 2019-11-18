@@ -43,7 +43,7 @@ export const Init = () => {
   };
 };
 
-const decode = (data) => {
+const decode = (data, id) => {
   if (!data) return [];
   const type = streamHelpers.typeOfAction(data);
   switch (type) {
@@ -51,11 +51,11 @@ const decode = (data) => {
     { type, label: data.action.name, props: data.props, timeSlices: 1 },
   ];
   case 'commit+effect': return [
-    { type: 'commit', label: 'COMMIT', timeSlices: 1, state: data.action[0], payload: data, id: data.id },
-    { type: 'effect', label: data.action[1][0].name, props: data.action[1][1], id: data.id },
+    { type: 'commit', label: 'COMMIT', timeSlices: 1, state: data.action[0], payload: data, id },
+    { type: 'effect', label: data.action[1][0].name, props: data.action[1][1], id },
   ];
   case 'commit': return [
-    { type, label: 'COMMIT', timeSlices: 1, state: data.action, payload: data, id: data.id },
+    { type, label: 'COMMIT', timeSlices: 1, state: data.action, payload: data, id },
   ];
   default: return [];
   }
@@ -159,7 +159,7 @@ export const ProcessDispatch = (state, message) => {
   return [
     {
       ...state,
-      queue: state.queue.concat(decode(payload)),
+      queue: state.queue.concat(decode(payload, id)),
     },
     effects.outgoingMessage({
       appId,
@@ -219,7 +219,8 @@ export const InspectEventIndex = (state, inspectedEventIndex) => {
       effects.scrollEventsTo({ eventIndex: inspectedEventIndex, animate: true }),
       effects.outgoingMessage({
         type: 'dispatch',
-        payload: commit.payload,
+        appId: state.debugApp,
+        id: commit.id,
       }),
     ],
   ];
