@@ -4,4 +4,5 @@ yarn-*.log
 bundle.js
 dist
 withDebug.*
-web-ext-artifacts
+release
+key.pem

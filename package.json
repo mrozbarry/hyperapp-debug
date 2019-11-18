@@ -10,8 +10,12 @@
   "scripts": {
     "start:testbed": "parcel ./src/test-bed/index.html",
     "start:extension": "web-ext run -s ./src/browser-extension -u http://localhost:1234",
-    "build:extension": "web-ext build -s ./src/browser-extension",
+    "build:extension:firefox": "web-ext build -s ./src/browser-extension --artifacts-dir ./release/",
+    "build:extension:chrome": "yarn build:extension:chrome:signed && yarn build:extension:chrome:unsigned",
+    "build:extension:chrome:signed": "crx pack ./src/browser-extension -o ./release/hyperapp-debug-dev-tools-chrome.crx -p ./key.pem",
+    "build:extension:chrome:unsigned": "crx pack ./src/browser-extension --zip-output ./release/hyperapp-debug-dev-tools-chrome-unsigned.zip -p ./key.pem",
     "build:hoa": "NODE_ENV=production microbundle build --name withDebug",
+    "build:extension": "mkdir -p release && yarn build:extension:firefox && yarn build:extension:chrome",
     "start": "concurrently \"yarn start:testbed\" \"sleep 5 && yarn start:extension\"",
     "prepublishOnly": "yarn build:hoa",
     "test": "ava"
@@ -23,6 +27,7 @@
     "ava": "^2.3.0",
     "babel-eslint": "^10.0.3",
     "concurrently": "^4.1.2",
+    "crx": "^5.0.1",
     "eslint": "^6.4.0",
     "hyperapp": "^2.0.1",
     "hyperapp-fx": "^2.0.0-beta.1",
