@@ -1,10 +1,23 @@
 # <img height=24 src=https://cdn.rawgit.com/JorgeBucaran/f53d2c00bafcf36e84ffd862f0dc2950/raw/882f20c970ff7d61aa04d44b92fc3530fa758bc0/Hyperapp.svg> Hyperapp Debug
 
+[![Mozilla Add-on](https://img.shields.io/amo/dw/hyperapp-debug-dev-tools)](https://addons.mozilla.org/en-US/firefox/addon/hyperapp-debug-dev-tools/)
 [![Travis CI](https://img.shields.io/travis/mrozbarry/hyperapp-debug.svg)](https://travis-ci.org/mrozbarry/hyperapp-debug)
 [![npm](https://img.shields.io/npm/v/hyperapp-debug.svg)](https://www.npmjs.com/package/hyperapp-debug)
 [![Slack](https://hyperappjs.herokuapp.com/badge.svg)](https://hyperappjs.herokuapp.com "Join us")
 
-A debugging high-order app for [Hyperapp](https://github.com/hyperapp/hyperapp).
+![](./docs/firefox-screenshot.png)
+
+A debugger for your [Hyperapp](https://github.com/hyperapp/hyperapp) applications.
+
+## What is it
+
+[hyperapp-debug](https://github.com/mrozbarry/hyperapp-debug) is a browser extension and higher-order app wrapper for your hyperapp applications.
+It is a tool similar to redux-dev-tools or vue-dev-tools, with tighter integration to the Hyperapp paradigm.
+To debug your application, you must install the browser extension. Don't worry, I don't collect any information at all, and the addon will always be free.
+
+## Hyperapp V1
+
+If you are debugging Hyperapp V1 applications, check out [the legacy debugger](https://github.com/mrozbarry/hyperapp-debug/tree/hyperapp-v1-debugger).
 
 ## Installation
 
@@ -21,7 +34,29 @@ import { app, h } from 'hyperapp';
 import withDebug from 'hyperapp-debug';
 ```
 
-If you don't want to set up a build environment, you can download Hyperapp Debug from a CDN like [unpkg.com](https://unpkg.com/hyperapp-debug) and it will be globally available through the <samp>window['hyperapp-debug'].default</samp> object. We support all ES5-compliant browsers, including Internet Explorer 10 and above.
+Or with `<script type="module">` and unpkg:
+
+```js
+import { app, h } from 'https://unpkg.com/hyperapp?module=1';
+import withDebug from 'https://unpkg.com/hyperapp-debug?module=1';
+```
+
+If you don't want to set up a build environment, you can download Hyperapp Debug from a CDN like [unpkg.com](https://unpkg.com/hyperapp-debug), and it will be globally available through the <samp>window['hyperapp-debug'].default</samp> object.
+hyperapp-debug supports all ES5-compliant browsers, including Internet Explorer 10 and above.
+
+```html
+<head>
+  <script src="https://unpkg.com/hyperapp"></script>
+  <script src="https://unpkg.com/hyperapp-debug"></script>
+</head>
+<body>
+  <script>
+    const { app, h } = window.hyperapp;
+    const withDebug = window['hyperapp-debug'].default;
+    // Your code here...
+  </script>
+</body>
+```
 
 ## Usage
 
@@ -43,33 +78,17 @@ The debugger will only work if you also install the Firefox/Chrome Extension.
 
 ## History
 
-For those coming from the elm community, you may notice much inspiration from [Elm's time-travelling debugger](http://debug.elm-lang.org/edit/Thwomp.elm).
+For those coming from the elm community, you may notice much inspiration from Elm's time-travelling debugger :heart:.
+
+## Contributing
+
+Check out the [CONTRIBUTING.md](./CONTRIBUTING.md) guidelines for more information.
 
 ## License
 
 Hyperapp Debug is MIT licensed. See [LICENSE.md](LICENSE.md).
 
-## Contributing
+## Other similar tools
 
-I'm currently using [web-ext](#todo), a Mozilla npm package for developing web extensions for Firefox (and Chrome, currently unsupported).
-That means you should have the latest version of Firefox installed, if you want to take advantage of web-ext.
-
-### With web-ext
-
-```bash
-yarn
-yarn start
-```
-
-Also open a tab in the new Firefox instance to [about:debugging](about:debugging), click `This Firefox`, and then click the `Inspect` button for the Hyperapp dev tools extension.
-The testbed app is meant to have minimal real-world-ish examples, and should be extended when there are missing use-cases.
-
-### Without web-ext
-
-In chrome, enable developer mode and load an unpacked extension, which ends up being [manifest.json](./src/browser-extension/manifest.json).
-In firefox, open a tab in the new Firefox instance to [about:debugging](about:debugging), click `This Firefox`, and then click `Load Temporary Add-ons...`, and pick [manifest.json](./src/browser-extension/manifest.json).
-
-```bash
-yarn
-yarn start:testbed
-```
+ - [hyperapp-redux-devtools](https://github.com/andyrj/hyperapp-redux-devtools)
+ - [hyperapp-devtools](https://github.com/hyperstart/hyperapp-devtools)
