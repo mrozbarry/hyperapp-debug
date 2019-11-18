@@ -166,7 +166,7 @@ const expanded = (state, actions) => (
           class: 'button detach',
           onclick: actions.detachResume,
           title: 'Resume interactivity, but from the current state',
-        }, ['Detach']),
+        }, 'Detach'),
       h('div', {
         key: 'playback',
         class: ['button playback', state.isTimeTravelling ? 'resume' : 'pause'].join(' '),
@@ -176,7 +176,7 @@ const expanded = (state, actions) => (
             : actions.timeTravelTo(state.states.length - 1)
         ),
         title: 'Toggle debug mode.',
-      }),
+      }, state.isTimeTravelling ? 'Resume' : 'Pause'),
     ]),
 
     h('div', {

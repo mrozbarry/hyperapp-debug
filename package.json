@@ -1,44 +1,45 @@
 {
   "name": "hyperapp-debug",
-  "version": "0.0.1-beta.10",
+  "version": "0.0.1-beta.12",
   "main": "index.js",
   "browser": "bundle.js",
   "module": "src/index.js",
   "license": "MIT",
   "repository": "github:HyperappCommunity/hyperapp-debug",
   "dependencies": {
-    "hyperapp": "^1.1.2",
+    "hyperapp": "^1.2.9",
     "lodash.isplainobject": "^4.0.6"
   },
   "devDependencies": {
-    "@ava/babel-preset-stage-4": "^1.1.0",
-    "@babel/core": "^7.0.0-beta.40",
-    "@babel/preset-env": "^7.0.0-beta.40",
-    "@babel/preset-stage-1": "^7.0.0-beta.40",
-    "@babel/register": "^7.0.0-beta.40",
-    "ava": "^0.25.0",
-    "babel-loader": "^8.0.0-beta.0",
-    "css-loader": "^0.28.9",
-    "lodash-webpack-plugin": "^0.11.4",
+    "@ava/babel-preset-stage-4": "^1",
+    "@babel/core": "^7.2.2",
+    "@babel/plugin-transform-spread": "^7.2.2",
+    "@babel/preset-env": "^7.3.1",
+    "@babel/register": "^7.0.0",
+    "ava": "^1",
+    "babel-loader": "^8.0.5",
+    "css-loader": "^2.1.0",
+    "lodash-webpack-plugin": "^0.11.5",
+    "servor": "^2.0.3",
     "sinon": "^4.3.0",
-    "style-loader": "^0.20.1",
+    "style-loader": "^0.23.1",
     "stylus": "^0.54.5",
-    "stylus-loader": "^3.0.1",
-    "uglifyjs-webpack-plugin": "^1.1.8",
-    "webpack": "^3.11.0",
-    "webpack-dev-server": "^2.11.1"
+    "stylus-loader": "^3.0.2",
+    "uglifyjs-webpack-plugin": "^2.1.1",
+    "webpack": "^4.29.3",
+    "webpack-cli": "^3.2.3"
   },
   "scripts": {
-    "build": "webpack --config ./config/webpack.build.js",
+    "build": "NODE_ENV=production webpack --config ./config/webpack.build.js --mode=production",
     "prepublishOnly": "yarn build",
-    "start": "webpack-dev-server --config ./config/webpack.example.js",
+    "dev": "cp -f ./bundle.js example/bundle.js && servor example index.html",
     "test": "ava"
   },
   "ava": {
     "files": [
       "src/**/*.test.js"
     ],
-    "source": [
+    "sources": [
       "src/**/*.test.js"
     ],
     "failFast": true,

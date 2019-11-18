@@ -1,16 +1,15 @@
-import { h, app } from 'hyperapp';
-import { debug as withDebug } from '../src/index.js';
+const { h, app } = hyperapp;
 
-export const initialState = {
+const initialState = {
   counter: 0,
   hist: [],
   text: "",
 };
 
-export const actions = {
+const actions = {
   increm: () => state => ({ hist: state.hist.concat(state.counter), counter: state.counter + 1 }),
   decrem: () => state => ({ hist: state.hist.concat(state.counter), counter: state.counter - 1 }),
-  setText: e => ({ text: e.target.value }),
+  setText: e => state => ({ text: e.target.value }),
 };
 
 const view = (state, actions) => (

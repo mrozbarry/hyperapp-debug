@@ -18,10 +18,10 @@ Then with a module bundler like [Rollup](https://rollupjs.org) or [Webpack](http
 
 ```js
 import { app, h } from 'hyperapp';
-import debug from 'hyperapp-debug';
+import { debug } from 'hyperapp-debug';
 ```
 
-If you don't want to set up a build environment, you can download Hyperapp Debug from a CDN like [unpkg.com](https://unpkg.com/hyperapp-debug) and it will be globally available through the <samp>window['hyperapp-debug'].default</samp> object. We support all ES5-compliant browsers, including Internet Explorer 10 and above.
+If you don't want to set up a build environment, you can download Hyperapp Debug from a CDN like [unpkg.com](https://unpkg.com/hyperapp-debug) and it will be globally available through the <samp>window.withDebug</samp> object. We support all ES5-compliant browsers, including Internet Explorer 10 and above.
 
 ## Usage
 
@@ -29,7 +29,7 @@ Use <samp>debug</samp> to wrap Hyperapp's <samp>app</samp> function.
 
 ```js
 import { app } from 'hyperapp';
-import debug from 'hyperapp-debug';
+import { debug } from 'hyperapp-debug';
 import { state, actions, view } from './your-app.js';
 
 debug(app)(state, actions, view);
