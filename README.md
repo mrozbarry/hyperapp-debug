@@ -52,7 +52,7 @@ hyperapp-debug supports all ES5-compliant browsers, including Internet Explorer 
 <body>
   <script>
     const { app, h } = window.hyperapp;
-    const withDebug = window['hyperapp-debug'];
+    const withDebug = window['hyperapp-debug'].default;
     // Your code here...
   </script>
 </body>
