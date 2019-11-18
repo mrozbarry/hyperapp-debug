@@ -1,4 +1,7 @@
 node_modules
-yarn.lock
+yarn-*.log
 .cache
 bundle.js
+dist
+withDebug.*
+web-ext-artifacts
