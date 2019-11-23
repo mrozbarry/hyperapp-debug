@@ -4,7 +4,7 @@
   "name": "Hyperapp Dev Tools",
   "description": "Time-travel debugger for Hyperapp V2",
   "author": "Alex Barry",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "permissions": [
     "activeTab",
     "<all_urls>"
