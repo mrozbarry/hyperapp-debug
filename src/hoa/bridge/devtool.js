@@ -20,8 +20,7 @@ export const makeEmit = appId => (type, payload, target = 'devtool') => {
 export const makeListen = appId => (fn) => {
   const listener = (event) => {
     const message = typeof event.detail === 'string'
-      ? JSON.parse(event.detail)
-      : event.detail;
+      ? JSON.parse(event.detail) : event.detail;
 
     if (message.target !== 'app') {
       return;
