@@ -1,7 +1,6 @@
 import * as subscriptionHelper from './helpers/subscription';
 import * as dispatchHelper from './helpers/dispatch';
 import devtoolBridge from './bridge/devtool';
-import makeCollector from './helpers/messageBatcher';
 
 const randId = () => Math.random().toString(36).slice(2);
 
@@ -13,10 +12,6 @@ export default app => (props) => {
   let dispatchHistory = {};
   let importHistory = [];
   let isBeingDebugged = false;
-
-  const collector = makeCollector((data) => {
-    console.log('ready to dump data', data);
-  });
 
   const addImportHistory = (id, type, payload) => {
     if (dispatchHistory[id]) {
@@ -35,7 +30,6 @@ export default app => (props) => {
     dispatch = originalDispatch;
 
     return (action, props) => {
-      collector.dispatch(action, props);
       const serialized = dispatchHelper.serialize(action, props);
       const id = bridge.emit('dispatch', serialized);
       addImportHistory(id, 'dispatch', serialized);
@@ -75,7 +69,6 @@ export default app => (props) => {
 
 
   const subscriptions = subscriptionHelper.wrap(props.subscriptions, (subEvents) => {
-    collector.subscriptions(subEvents);
     const id = bridge.emit('subscriptions', subEvents);
     addImportHistory(id, 'subscriptions', subEvents);
   });
