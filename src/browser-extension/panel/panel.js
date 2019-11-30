@@ -67,7 +67,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
       const appList = [
         ...state.apps,
-        // { name: 'Fake', id: '000-000' },
       ];
 
       const getAction = index => {
@@ -98,7 +97,6 @@ document.addEventListener('DOMContentLoaded', () => {
               h('section', {
                 class: 'stream',
                 style: {
-                  //gridTemplateColumns: `repeat(${iter.length}, 130px)`,
                   gridTemplateRows: `repeat(${2 + subs.length}, 38px)`,
                 },
               },
