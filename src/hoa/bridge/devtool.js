@@ -1,9 +1,9 @@
-export const makeEmit = appId => (type, payload, target = 'devtool') => {
-  const id = [
-    performance.now(),
-    appId,
-    type,
-  ].join('_');
+const defaultEmitIdGenerator = (appId, type) => {
+  return [window.performance.now(), appId, type].join('_');
+};
+
+export const makeEmit = (appId, idGenerator) => (type, payload, target = 'devtool') => {
+  const id = idGenerator(appId, type);
 
   const detail = {
     id,
@@ -12,7 +12,7 @@ export const makeEmit = appId => (type, payload, target = 'devtool') => {
     type,
     payload,
   };
-  const event = new CustomEvent('$hyperapp-debugger', { detail });
+  const event = new window.CustomEvent('$hyperapp-debugger', { detail });
   window.dispatchEvent(event);
   return id;
 };
@@ -38,8 +38,8 @@ export const makeListen = appId => (fn) => {
   };
 };
 
-export default (appId, appName) => {
-  const emit = makeEmit(appId);
+export default (appId, appName, idGenerator = defaultEmitIdGenerator) => {
+  const emit = makeEmit(appId, idGenerator);
   const listen = makeListen(appId);
 
   emit('register', { appName }, 'panel');
