@@ -84,3 +84,44 @@ browserTest('the listener ignores messages targetting app with the wrong appId',
   cancel();
   bridge.close();
 });
+
+browserTest('the listener can parse JSON strings', (t) => {
+  const bridge = devtool(appId, appName);
+
+  const listener = sinon.fake();
+  const cancel = bridge.listen(listener);
+
+  const detail = { target: 'app', appId };
+  const event = new window.CustomEvent('$hyperapp-debugger', { detail: JSON.stringify(detail) });
+  window.dispatchEvent(event);
+
+  t.is(listener.callCount, 1);
+  t.deepEqual(listener.firstCall.args[0], detail);
+
+  cancel();
+  bridge.close();
+});
+
+browserTest('the default target is devtool', (t) => {
+  const dispatchEventSpy = sinon.spy(window, 'dispatchEvent');
+
+  const bridge = devtool(appId, appName);
+
+  const listener = sinon.fake();
+  const cancel = bridge.listen(listener);
+
+  const id = bridge.emit('foo', {});
+
+  const expectedDispatch = {
+    type: 'foo',
+    payload: {},
+    target: 'devtool',
+    id,
+    appId,
+  };
+
+  t.deepEqual(dispatchEventSpy.lastCall.args[0].detail, expectedDispatch);
+
+  cancel();
+  bridge.close();
+});
