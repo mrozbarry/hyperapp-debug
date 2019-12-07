@@ -18,13 +18,14 @@
     "build:extension": "mkdir -p release && yarn build:extension:firefox && yarn build:extension:chrome",
     "start": "concurrently \"yarn start:testbed\" \"sleep 5 && yarn start:extension\"",
     "prepublishOnly": "yarn build:hoa",
-    "test": "ava"
+    "test": "ava",
+    "test:coverage": "nyc ava --"
   },
   "devDependencies": {
     "@babel/core": "^7.5.5",
     "@babel/preset-env": "^7.5.5",
     "@babel/register": "^7.5.5",
-    "ava": "^2.3.0",
+    "ava": "^2.4.0",
     "babel-eslint": "^10.0.3",
     "concurrently": "^4.1.2",
     "crx": "^5.0.1",

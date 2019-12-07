@@ -2059,7 +2059,7 @@ autoprefixer@^9.0.0:
     postcss "^7.0.17"
     postcss-value-parser "^4.0.0"
 
-ava@^2.3.0:
+ava@^2.4.0:
   version "2.4.0"
   resolved "https://registry.yarnpkg.com/ava/-/ava-2.4.0.tgz#a3bd8b0e01d8826004c91de375eb2313ba5237c3"
   integrity sha512-CQWtzZZZeU2g4StojRv6MO9RIRi4sLxGSB9+3C3hv0ttUEG1tkJLTLyrBQeFS4WEeK12Z4ovE3f2iPVhSy8elA==
