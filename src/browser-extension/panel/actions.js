@@ -61,38 +61,6 @@ const decode = (data, id) => {
   }
 };
 
-const mergeSubs = (subscription, eventIndex, data) => {
-  if (data.type === 'subscription/start') {
-    return {
-      ...subscription,
-      [data.name]: injectIntoArray(subscription[data.name], eventIndex, {
-        type: 'subscription',
-        label: data.name,
-        timeSlices: 1,
-        ended: false,
-      }),
-    };
-
-  } else {
-    const source = [...(subscription[data.name] || [])];
-    const index = source.reverse().findIndex(s => s && !s.ended);
-    if (index >= 0) {
-      const lastIndex = source.length - index - 1;
-      const sub = subscription[data.name][lastIndex];
-      return {
-        ...subscription,
-        [data.name]: injectIntoArray(subscription[data.name], lastIndex, {
-          ...sub,
-          ended: true,
-          timeSlices: eventIndex - lastIndex + 1,
-        }),
-      };
-    }
-  }
-
-  return subscription;
-};
-
 export const SetRegistrations = (state, message) => {
   const apps = setAppsState(message.payload);
   const isCurrentAppRegistered = state.debugApp && apps.some(a => a.appId === state.debugApp);
@@ -100,7 +68,7 @@ export const SetRegistrations = (state, message) => {
     return message.payload.length > 0
       ? message.payload[0].appId
       : null;
-  }
+  };
   const debugApp = isCurrentAppRegistered
     ? state.debugApp
     : getDebugAppFromMessage();
@@ -171,6 +139,109 @@ export const ProcessDispatch = (state, message) => {
   ];
 };
 
+// const mergeSubs = (subscription, eventIndex, data) => {
+//   if (data.type === 'subscription/start') {
+//     return {
+//       ...subscription,
+//       [data.name]: injectIntoArray(subscription[data.name], eventIndex, {
+//         type: 'subscription',
+//         label: data.name,
+//         timeSlices: 1,
+//         ended: false,
+//       }),
+//     };
+// 
+//   } else {
+//     const source = [...(subscription[data.name] || [])];
+//     const index = source.reverse().findIndex(s => s && !s.ended);
+//     if (index >= 0) {
+//       const lastIndex = source.length - index - 1;
+//       const sub = subscription[data.name][lastIndex];
+//       return {
+//         ...subscription,
+//         [data.name]: injectIntoArray(subscription[data.name], lastIndex, {
+//           ...sub,
+//           ended: true,
+//           timeSlices: eventIndex - lastIndex + 1,
+//         }),
+//       };
+//     }
+//   }
+// 
+//   return subscription;
+// };
+
+const findActiveSubscriptions = (subscriptionStreamLookup) => {
+  // { name: 'FooFX', index: 1 }
+  return Object.keys(subscriptionStreamLookup).reduce((actives, subscriptionName) => {
+    return [
+      ...actives,
+      ...subscriptionStreamLookup[subscriptionName]
+        .map((sub, index) => ({ name: subscriptionName, index, data: sub }))
+        .filter(active => !active.data.ended),
+    ];
+  }, []);
+};
+
+const isSameSub = (sub1, sub2) => {
+  const isProbablySameEffect = sub1[0].name === sub2[0].name;
+  if (!isProbablySameEffect) return false;
+
+  const propNames = Array.from(new Set(Object.keys(sub1[1]).concat(Object.keys(sub2[1]))));
+
+  for(const propName of propNames) {
+    if (sub1[1][propName] != sub2[1][propName]) return false;
+  }
+
+  return true;
+};
+
+const resolveSubscriptionStreamFromPayload = (eventIndex, payload, subscriptionStreamLookup) => {
+  const remainingPayload = [...payload];
+
+  // Match up previously un-ended subscriptions with new data
+  const nextSubscriptionStreamLookup = { ...subscriptionStreamLookup };
+  for(const activeSubscription of findActiveSubscriptions(subscriptionStreamLookup)) {
+    const { data } = activeSubscription;
+
+
+    let update = {};
+    const index = remainingPayload.findIndex(sub => isSameSub(sub, [{ name: activeSubscription.name }]));
+    if (index === -1) {
+      update = { ended: true };
+    } else {
+      remainingPayload.splice(index, 1);
+      update = { ended: false, timeSlices: data.timeSlices + 1 };
+    }
+
+    nextSubscriptionStreamLookup[activeSubscription.name] = injectIntoArray(
+      nextSubscriptionStreamLookup[activeSubscription.name],
+      activeSubscription.index,
+      {
+        ...data,
+        ...update,
+      },
+    );
+  }
+
+  // Create new subscription stream entries for payload data that was not previously used in above loop
+  for(const subscription of remainingPayload) {
+    const { name } = subscription[0];
+    nextSubscriptionStreamLookup[name] = injectIntoArray(
+      nextSubscriptionStreamLookup[name],
+      eventIndex,
+      {
+        type: 'subscription',
+        label: name,
+        timeSlices: 1,
+        ended: false,
+      },
+    );
+  }
+
+  return nextSubscriptionStreamLookup;
+};
+
 export const CommitDispatch = (state, { appId, payload }) => {
   if (appId !== state.debugApp) {
     return state;
@@ -188,9 +259,7 @@ export const CommitDispatch = (state, { appId, payload }) => {
     action: injectIntoArray(state.streams.action, eventIndex, items.action),
     commit: injectIntoArray(state.streams.commit, eventIndex, items.commit),
     effect: injectIntoArray(state.streams.effect, eventIndex, items.effect),
-    subscription: payload.reduce((subscription, event) => (
-      mergeSubs(subscription, eventIndex, event)
-    ), state.streams.subscription),
+    subscription: resolveSubscriptionStreamFromPayload(eventIndex, payload, state.streams.subscription),
   };
 
   return [
