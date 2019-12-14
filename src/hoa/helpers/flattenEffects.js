@@ -23,6 +23,5 @@ export const flattenEffects = effects => {
       ...children,
     ];
   }, []);
-}
-
+};
 
