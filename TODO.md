@@ -15,5 +15,10 @@
  - [x] Improve communication bridge
  - [x] Improve panel app
 
+ - [ ] Refactor how subscriptions are sent to the devtool
+   - [x] Get subscription.js under tests
+   - [x] Submit only active subscriptions to devtool
+   - [ ] Fix bug where on subscription end, we lose the timeSlices information/maybe it creates a new sub with timeslice 1 and ended immediately
+
  - Future: add window.open variant of devtool
    - [ ] Allow user to specify custom bridge, default to devtool
