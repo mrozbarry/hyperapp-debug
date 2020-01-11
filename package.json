@@ -19,7 +19,7 @@
     "start": "concurrently \"yarn start:testbed\" \"sleep 5 && yarn start:extension\"",
     "prepublishOnly": "yarn build:hoa",
     "test": "ava",
-    "test:coverage": "nyc ava --"
+    "test:coverage": "nyc ava"
   },
   "devDependencies": {
     "ava": "^2.4.0",
@@ -44,7 +44,7 @@
       "src/**/*.test.js"
     ],
     "source": [
-      "src/**/*.test.js"
+      "src/**/*.js"
     ],
     "failFast": true,
     "failWithoutassertions": false,
