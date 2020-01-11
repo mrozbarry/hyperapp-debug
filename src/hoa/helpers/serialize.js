@@ -16,7 +16,9 @@ const serializeEventTarget = target => ({
 });
 
 export const serialize = object => {
-  if (object instanceof window.Event) {
+  if (typeof object === 'undefined' || object === null) {
+    return object;
+  } else if (object instanceof window.Event) {
     return {
       target: serializeEventTarget(object.target),
       currentTarget: serializeEventTarget(object.currentTarget),
