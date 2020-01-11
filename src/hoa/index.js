@@ -54,9 +54,14 @@ export default app => (props) => {
     }
   };
 
+  const onDevToolDiscover = () => {
+    bridge.emit('register', { appName }, 'panel');
+  };
+
   const devToolMessageHandler = {
     'dispatch': onDevToolDispatch,
     'use': onDevToolUse,
+    'discover': onDevToolDiscover,
   };
 
   bridge.listen((message) => {
