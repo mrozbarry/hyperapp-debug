@@ -139,38 +139,6 @@ export const ProcessDispatch = (state, message) => {
   ];
 };
 
-// const mergeSubs = (subscription, eventIndex, data) => {
-//   if (data.type === 'subscription/start') {
-//     return {
-//       ...subscription,
-//       [data.name]: injectIntoArray(subscription[data.name], eventIndex, {
-//         type: 'subscription',
-//         label: data.name,
-//         timeSlices: 1,
-//         ended: false,
-//       }),
-//     };
-// 
-//   } else {
-//     const source = [...(subscription[data.name] || [])];
-//     const index = source.reverse().findIndex(s => s && !s.ended);
-//     if (index >= 0) {
-//       const lastIndex = source.length - index - 1;
-//       const sub = subscription[data.name][lastIndex];
-//       return {
-//         ...subscription,
-//         [data.name]: injectIntoArray(subscription[data.name], lastIndex, {
-//           ...sub,
-//           ended: true,
-//           timeSlices: eventIndex - lastIndex + 1,
-//         }),
-//       };
-//     }
-//   }
-// 
-//   return subscription;
-// };
-
 const findActiveSubscriptions = (subscriptionStreamLookup) => {
   // { name: 'FooFX', index: 1 }
   return Object.keys(subscriptionStreamLookup).reduce((actives, subscriptionName) => {
