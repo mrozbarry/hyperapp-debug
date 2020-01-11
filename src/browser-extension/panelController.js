@@ -44,6 +44,11 @@ const connect = () => {
           });
         };
         appChangeFn();
+
+        port.postMessage({
+          target: 'app',
+          type: 'discover'
+        });
       });
 
       panel.onHidden.addListener(() => {
