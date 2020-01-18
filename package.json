@@ -30,7 +30,7 @@
     "hyperapp": "^2.0.1",
     "hyperapp-fx": "^2.0.0-beta.1",
     "jsdom": "^15.2.1",
-    "microbundle": "^0.11.0",
+    "microbundle": "0.12.0-next.6",
     "nyc": "^14.1.1",
     "parcel": "^1.12.3",
     "sinon": "^7.5.0",
