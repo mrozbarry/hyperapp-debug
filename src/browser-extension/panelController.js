@@ -1,3 +1,7 @@
+const compatibleNpmPackageVersions = [
+  '1.0.0-beta.5',
+];
+
 let port = null;
 let registeredApps = [];
 let appChangeFn = () => {};
@@ -10,15 +14,23 @@ const connect = () => {
     return setTimeout(connect, 100);
   }
 
-  const addApp = ({ appId, payload: { appName } }) => {
+  const addApp = ({ appId, payload: { appName, withDebugVersion } }) => {
     const alreadyRegistered = registeredApps.some(a => a.appId === appId);
     if (alreadyRegistered) {
       return;
     }
+
+    const isCompatible = withDebugVersion
+      ? compatibleNpmPackageVersions.includes(withDebugVersion)
+      : false;
+
     registeredApps.push({
       appId,
       appName,
+      withDebugVersion,
+      isCompatible,
     });
+
     appChangeFn();
   };
 
