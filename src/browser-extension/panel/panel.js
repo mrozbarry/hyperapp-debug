@@ -77,6 +77,8 @@ document.addEventListener('DOMContentLoaded', () => {
         return state.streams.action[index];
       }
 
+      const currentApp = appList.find(({ appId }) => appId === state.debugApp);
+
       return h('body', null, [
         h('article', { class: 'layout' }, [
           h('section', { class: 'layout-events' }, [
@@ -95,7 +97,7 @@ document.addEventListener('DOMContentLoaded', () => {
               ))),
             ]),
 
-            app && !app.isCompatible && compatibilityWarning(),
+            currentApp && !currentApp.isCompatible && compatibilityWarning(),
 
             h('div', { class: 'stream-container' },
               h('section', {
