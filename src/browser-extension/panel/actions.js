@@ -13,7 +13,7 @@ const injectIntoArray = (arr, index, data) => {
 };
 
 const setAppsState = (apps) => [
-  { appId: null, appName: '<Not Debugging>' },
+  { appId: null, appName: '<Not Debugging>', isCompatible: true },
   ...apps,
 ];
 

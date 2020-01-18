@@ -2,6 +2,7 @@ import { app, h } from './hyperapp.js';
 import * as actions from './actions.js';
 import * as effects from './effects/index.js';
 import { quickControls } from './components/quickControls.js';
+import { compatibilityWarning } from './components/compatibilityWarning.js';
 import currentEventIndex from './helpers/currentEventIndex.js';
 import * as jsonView from './jsonView.js';
 
@@ -76,6 +77,8 @@ document.addEventListener('DOMContentLoaded', () => {
         return state.streams.action[index];
       }
 
+      const currentApp = appList.find(({ appId }) => appId === state.debugApp);
+
       return h('body', null, [
         h('article', { class: 'layout' }, [
           h('section', { class: 'layout-events' }, [
@@ -93,6 +96,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 app.appName
               ))),
             ]),
+
+            currentApp && !currentApp.isCompatible && compatibilityWarning(),
+
             h('div', { class: 'stream-container' },
               h('section', {
                 class: 'stream',
