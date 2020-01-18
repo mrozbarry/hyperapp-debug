@@ -1,6 +1,7 @@
 import { browserTest } from '../../support/jsdom';
 import sinon from 'sinon';
 import devtool from './devtool';
+import packageJson from '../../../package.json';
 
 const appId = 'appId';
 const appName = 'appName';
@@ -26,7 +27,10 @@ browserTest('it emits register with appname to panel', (t) => {
     appId,
     target: 'panel',
     type: 'register',
-    payload: { appName },
+    payload: {
+      appName,
+      withDebugVersion: packageJson.version,
+    },
   };
 
 

@@ -1,3 +1,5 @@
+import packageJson from '../../../package.json';
+
 const defaultEmitIdGenerator = (appId, type) => {
   return [window.performance.now(), appId, type].join('_');
 };
@@ -42,7 +44,10 @@ export default (appId, appName, idGenerator = defaultEmitIdGenerator) => {
   const emit = makeEmit(appId, idGenerator);
   const listen = makeListen(appId);
 
-  emit('register', { appName }, 'panel');
+  emit('register', {
+    appName,
+    withDebugVersion: packageJson.version,
+  }, 'panel');
 
   const close = () => {
     emit('unregister', {}, 'panel');
