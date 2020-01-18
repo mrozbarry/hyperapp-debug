@@ -2,6 +2,7 @@ import { app, h } from './hyperapp.js';
 import * as actions from './actions.js';
 import * as effects from './effects/index.js';
 import { quickControls } from './components/quickControls.js';
+import { compatibilityWarning } from './components/compatibilityWarning.js';
 import currentEventIndex from './helpers/currentEventIndex.js';
 import * as jsonView from './jsonView.js';
 
@@ -93,6 +94,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 app.appName
               ))),
             ]),
+
+            app && !app.isCompatible && compatibilityWarning(),
+
             h('div', { class: 'stream-container' },
               h('section', {
                 class: 'stream',

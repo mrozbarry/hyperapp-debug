@@ -12,6 +12,20 @@ body * {
   box-sizing: border-box;
 }
 
+.compatibility-warning {
+  padding: 1rem;
+  background-color: hsl(40, 70%, 60%);
+  color: white;
+}
+
+.compatibility-warning .links {
+  padding: 1rem;
+}
+
+.compatibility-warning a {
+  color: white;
+}
+
 .layout {
   display: flex;
   flex-direction: row;
