@@ -37,6 +37,7 @@ jobs:
       with:
         # The web-ext command to run (lint, build, sign)
         cmd: build
+        id: web-ext-build
         # The source xpi or path
         source: ./src/browser-extension
         # The path to put artifacts, e.g. from build or signing
@@ -52,3 +53,8 @@ jobs:
         # [sign] The URL of the signing API, defaults to AMO production
         # apiUrlPrefix: # optional, default is https://addons.mozilla.org/api/v3rlPrefix: # optional, default is https://a
 
+    - name: "Upload Artifact"
+      uses: actions/upload-artifact@master
+      with:
+        name: hyperapp-devtools.xpi
+        path: ${{ steps.web-ext-build.outputs.target }}
