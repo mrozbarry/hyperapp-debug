@@ -15,7 +15,7 @@ jobs:
       with:
         cmd: install
 
-    - name: Yarn install
+    - name: Run the tests
       uses: Borales/actions-yarn@v2.1.0
       with:
         cmd: test
@@ -34,10 +34,10 @@ jobs:
 
     - name: web-ext build
       uses: kewisch/action-web-ext@v1.0
+      id: web-ext-build
       with:
         # The web-ext command to run (lint, build, sign)
         cmd: build
-        id: web-ext-build
         # The source xpi or path
         source: ./src/browser-extension
         # The path to put artifacts, e.g. from build or signing
