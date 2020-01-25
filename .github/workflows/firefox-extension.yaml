@@ -1,0 +1,54 @@
+name: CI
+
+on: [pull_request]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v1
+
+    - name: Yarn install
+      uses: Borales/actions-yarn@v2.1.0
+      with:
+        cmd: install
+
+    - name: Yarn install
+      uses: Borales/actions-yarn@v2.1.0
+      with:
+        cmd: test
+
+    - name: web-ext lint
+      uses: kewisch/action-web-ext@v1.0
+      with:
+        # The web-ext command to run (lint, build, sign)
+        cmd: lint
+        # The source xpi or path
+        source: ./src/browser-extension
+        # The path to put artifacts, e.g. from build or signing
+        artifacts: release
+        # More debugging fore certain steps
+        verbose: true
+
+    - name: web-ext build
+      uses: kewisch/action-web-ext@v1.0
+      with:
+        # The web-ext command to run (lint, build, sign)
+        cmd: build
+        # The source xpi or path
+        source: ./src/browser-extension
+        # The path to put artifacts, e.g. from build or signing
+        artifacts: release
+        # More debugging fore certain steps
+        verbose: true
+        # [lint+sign] The target channel
+        # channel: # optional, default is unlisted
+        # [sign] The API key used for signing
+        # apiKey: # optional
+        # [sign] The API secret used for signing
+        # apiSecret: # optional
+        # [sign] The URL of the signing API, defaults to AMO production
+        # apiUrlPrefix: # optional, default is https://addons.mozilla.org/api/v3rlPrefix: # optional, default is https://a
+
