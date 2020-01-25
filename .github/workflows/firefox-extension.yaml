@@ -56,5 +56,5 @@ jobs:
     - name: "Upload Artifact"
       uses: actions/upload-artifact@master
       with:
-        name: hyperapp-devtools.xpi
+        name: target.xpi
         path: ${{ steps.web-ext-build.outputs.target }}
