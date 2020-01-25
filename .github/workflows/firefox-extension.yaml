@@ -33,5 +33,5 @@ jobs:
     - name: "Upload Artifact"
       uses: actions/upload-artifact@master
       with:
-        name: target.xpi
+        name: hyperapp-devtools-firefox-extension
         path: ./src/browser-extension
