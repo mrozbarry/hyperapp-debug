@@ -27,34 +27,11 @@ jobs:
         cmd: lint
         # The source xpi or path
         source: ./src/browser-extension
-        # The path to put artifacts, e.g. from build or signing
-        artifacts: release
         # More debugging fore certain steps
         verbose: true
-
-    - name: web-ext build
-      uses: kewisch/action-web-ext@v1.0
-      id: web-ext-build
-      with:
-        # The web-ext command to run (lint, build, sign)
-        cmd: build
-        # The source xpi or path
-        source: ./src/browser-extension
-        # The path to put artifacts, e.g. from build or signing
-        artifacts: release
-        # More debugging fore certain steps
-        verbose: true
-        # [lint+sign] The target channel
-        # channel: # optional, default is unlisted
-        # [sign] The API key used for signing
-        # apiKey: # optional
-        # [sign] The API secret used for signing
-        # apiSecret: # optional
-        # [sign] The URL of the signing API, defaults to AMO production
-        # apiUrlPrefix: # optional, default is https://addons.mozilla.org/api/v3rlPrefix: # optional, default is https://a
 
     - name: "Upload Artifact"
       uses: actions/upload-artifact@master
       with:
         name: target.xpi
-        path: ${{ steps.web-ext-build.outputs.target }}
+        path: ./src/browser-extension
