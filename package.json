@@ -1,14 +1,15 @@
 {
   "name": "hyperapp-debug",
-  "version": "1.0.0-beta.4",
+  "version": "1.0.1-beta.0",
   "source": "./src/hoa/index.js",
   "main": "withDebug.js",
   "module": "withDebug.module.js",
   "unpkg": "withDebug.umd.js",
   "license": "MIT",
-  "repository": "github:HyperappCommunity/hyperapp-debug",
+  "repository": "github:mrozbarry/hyperapp-debug",
   "scripts": {
     "start:testbed": "parcel ./src/test-bed/index.html",
+    "start:panel": "parcel ./src/panel/demo.html",
     "start:extension": "web-ext run -s ./src/browser-extension -u http://localhost:1234",
     "build:extension:firefox": "web-ext build -s ./src/browser-extension --artifacts-dir ./release/",
     "build:extension:chrome": "yarn build:extension:chrome:signed && yarn build:extension:chrome:unsigned",
@@ -22,19 +23,19 @@
     "test:coverage": "nyc ava"
   },
   "devDependencies": {
-    "ava": "^2.4.0",
+    "ava": "^3.15",
     "concurrently": "^4.1.2",
     "crx": "^5.0.1",
     "eslint": "^6.4.0",
     "esm": "^3.2.25",
-    "hyperapp": "^2.0.1",
-    "hyperapp-fx": "^2.0.0-beta.1",
-    "jsdom": "^15.2.1",
+    "highlight.js": "^11.2.0",
+    "hyperapp": "^2.0.18",
+    "jsdom": "^17.0",
     "microbundle": "0.12.0-next.6",
-    "nyc": "^14.1.1",
-    "parcel": "^1.12.3",
-    "sinon": "^7.5.0",
-    "web-ext": "^3.1.1"
+    "nyc": "^15.1",
+    "parcel-bundler": "^1.12.5",
+    "sinon": "^11.1.2",
+    "web-ext": "^6.3"
   },
   "peerDependencies": {
     "hyperapp": "^2"

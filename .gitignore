@@ -7,3 +7,4 @@ withDebug.*
 release
 key.pem
 .nyc_output
+.parcel-cache
