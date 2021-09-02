@@ -1,4 +1,5 @@
-const eventName = '$hyperapp-debugger';
+const eventName = '$hyperapp-debug';
+const eventNameForExtension = `${eventName}:extension`;
 let port = null;
 
 const connect = () => {
@@ -12,24 +13,27 @@ const connect = () => {
     return reconnect();
   }
 
-  const relayEventsToDevtool = (e) => {
-    port.postMessage({ ... e.detail });
+  const relayEventsToDevTool = (e) => {
+    console.log('relayEventsToDevTool', e.detail);
+    // port.postMessage({ ... e.detail });
   };
 
   const relayEventsToApp = (message) => {
-    window.dispatchEvent(new CustomEvent(eventName, {
+    const eventNameForApp = `${eventName}:${message.target}`;
+    window.dispatchEvent(new CustomEvent(eventNameForApp, {
       detail: JSON.stringify(message),
     }));
   };
 
-  window.addEventListener(eventName, relayEventsToDevtool, false);
+  window.addEventListener(eventNameForExtension, relayEventsToDevTool, false);
   port.onMessage.addListener(relayEventsToApp);
 
   port.onDisconnect.addListener(() => {
     port = null;
-    window.removeEventListener(eventName, relayEventsToDevtool);
+    window.removeEventListener(eventNameForExtension, relayEventsToDevtool);
     reconnect();
   });
 };
 
 connect();
+console.log('Injected browser extension script');

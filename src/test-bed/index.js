@@ -1,66 +1,55 @@
-import { app, h } from 'hyperapp';
-import { Http, Interval } from 'hyperapp-fx';
-import withDebug from '../hoa/index.js';
-
-const LOAD_STATUS = {
-  pending: 'pending',
-  success: 'success',
-  error: 'error',
-};
-
-const loadable = (status, data) => [LOAD_STATUS.success, LOAD_STATUS.error].indexOf(status) >= 0 ? [status, data] : [status, null]; const loadablePending = () => loadable(LOAD_STATUS.pending); const loadableSuccess = data => loadable(LOAD_STATUS.success, data);
-const loadableError = err => loadable(LOAD_STATUS.error, err);
-const loadableGet = (loadableTuple, on = {}) => {
-  const fn = on[loadableTuple[0]] || (() => null);
-  return fn(loadableTuple[1]);
-};
+import { app, h, text } from 'hyperapp';
+import { HyperappDebug } from '../lib/hyperappDebug.js';
 
 // Basic Counter
+const Delay = fxProps => [
+  function DelayFx(dispatch, props) {
+    setTimeout(() => {
+      dispatch(props.action);
+    }, props.delay);
+  },
+  fxProps,
+];
 const Add = state => ({ ...state, value: state.value + 1 });
 const Sub = state => ({ ...state, value: state.value - 1 });
-
-// Quotes
-const SetQuoteOK = (state, response) => ({
-  ...state,
-  quote: loadableSuccess(response.content),
-});
-const SetQuoteERR = (state, response) => ({
-  ...state,
-  quote: loadableError(`Status ${response.status}`)
-});
-const GetQuote = state => [
-  {
-    ...state,
-    quote: loadablePending(),
-  },
-  Http({
-    url: 'https://api.quotable.io/random',
-    action: SetQuoteOK,
-    error: SetQuoteERR,
-  }),
+const AddWithDelay = state => [
+  state,
+  Delay({ delay: 1000, action: Add }),
 ];
 
 // Interval Counter
 const IntervalToggle = state => ({ ...state, runInterval: !state.runInterval });
 const IntervalTick = state => ({ ...state, intervalValue: state.intervalValue + 1 });
+const Interval = subProps => [
+  function IntervalSub(dispatch, props) {
+    const interval = setInterval(() => {
+      dispatch(props.action);
+    }, props.every);
+    return () => {
+      clearInterval(interval);
+    };
+  },
+  subProps,
+]
 
-const Init = () => GetQuote({
+const Init = () => ({
   value: 0,
-  quote: loadablePending(),
   runInterval: false,
   intervalValue: 0,
 });
 
-const box = (children) => h('div', { style: { margin: '8p16 0', borderLeft: '2px gray solid', padding: '16px', marginLeft: '8px' } }, children);
-const testCase = ({ title, description }, children) => h('section', null, [
-  h('section', null, [
-    h('h2', null, title),
-    h('p', null, description),
+const box = (children = []) => h('div', { style: { margin: '8p16 0', borderLeft: '2px gray solid', padding: '16px', marginLeft: '8px' } }, children);
+const testCase = ({ title, description }, children) => h('section', {}, [
+  h('section', {}, [
+    h('h2', {}, text(title)),
+    h('p', {}, text(description)),
     box(children),
   ]),
 ]);
 
-const mount = (debugName, node) => withDebug(app)({
+const hyperappDebug = new HyperappDebug();
+
+const mount = (debugName, node) => hyperappDebug.enhance(app)({
   init: Init(),
   view: state => h('article', {
     style: {
@@ -69,44 +58,29 @@ const mount = (debugName, node) => withDebug(app)({
       borderBottom: '1px #eee solid',
     },
   }, [
-    h('h1', null, debugName),
+    h('h1', {}, text(debugName)),
 
     testCase({
       title: 'Basic Counter',
       description: 'Testing actions and commits',
     }, [
-      h('button', { type: 'button', onclick: Sub }, '-'),
-      h('strong', null, state.value),
-      h('button', { type: 'button', onclick: Add }, '+'),
-    ]),
-
-    testCase({
-      title: 'Quote Loader',
-      description: 'Testing effects',
-    }, [
-      loadableGet(state.quote, {
-        pending: () => h('div', null, '...'),
-        success: quote => h('quote', null, quote),
-        error: err => h('div', null, `ERROR: ${err.toString()}`),
-      }),
-      h('button', { type: 'button', style: { display: 'block' }, onclick: GetQuote }, 'Get Quote'),
+      h('button', { type: 'button', onclick: Sub }, text('-')),
+      h('strong', { style: { padding: '0 1rem' } }, text(state.value.toString())),
+      h('button', { type: 'button', onclick: Add }, text('+')),
+      h('button', { type: 'button', onclick: AddWithDelay }, text('delayed +')),
     ]),
 
     testCase({
       title: 'Interval Counter',
       description: 'Testing effects via subscriptions',
     }, [
-      h('strong', null, state.intervalValue),
-      h('button', { type: 'button', style: { display: 'block' }, onclick: IntervalToggle }, state.runInterval ? 'Turn OFF Interval' : 'Turn ON Interval'),
+      h('strong', {}, text(state.intervalValue.toString())),
+      h('button', { type: 'button', style: { display: 'block' }, onclick: IntervalToggle }, text(`Turn ${state.runInterval ? 'OFF' : 'ON'} Interval`)),
     ]),
 
   ]),
   subscriptions: state => [
-    state.runInterval && [
-      [
-        Interval({ every: 1000, action: IntervalTick }),
-      ]
-    ],
+    state.runInterval && Interval({ every: 1000, action: IntervalTick }),
   ],
   node,
   debugName,

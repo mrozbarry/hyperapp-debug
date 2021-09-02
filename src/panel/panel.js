@@ -3,8 +3,9 @@ import { app, h, text } from 'hyperapp';
 import { HyperappEvent } from './components/HyperappEvent.js';
 import { Container } from './components/Container.js';
 import { Header } from './components/Header.js';
+import { H1 } from './components/Text.js';
 
-import { Listener } from './subscriptions/Listener.js';
+import { ChromeRuntimeConnection } from './subscriptions/ChromeRuntimeConnection.js';
 
 import * as actions from './actions.js';
 
@@ -29,7 +30,22 @@ const selectHistory = (state) => {
         : true;
 
       return showType && showFilter;
+    })
+    .map((hist, index, self) => {
+      const next = self[index + 1];
+      const relativeTime = next
+        ? hist.timestamp - next.timestamp
+        : null;
+
+      return { ...hist, timestampOffset: relativeTime };
     });
+};
+
+const getInspectorSubscriptions = (state) => {
+  const historyItem = state.history.find(h => h.id === state.browsing.historyId);
+  if (!historyItem) return [];
+
+  return historyItem.subscriptions;
 };
 
 export const create = (node) => app({
@@ -42,7 +58,7 @@ export const create = (node) => app({
     },
     [
       Container([
-        Header('Events', [
+        Header(H1(text('Events')), [
           h('label', { class: 'mr-2' }, [
             h('input', {
               type: 'checkbox',
@@ -83,7 +99,7 @@ export const create = (node) => app({
             text('Subscriptions')
           ]),
           h('input', {
-            type: 'text',
+            type: 'search',
             placeholder: 'filter',
             class: 'border border-gray-300 py-1 px-2',
             value: state.filters.search,
@@ -92,26 +108,6 @@ export const create = (node) => app({
               return actions.SetFilterSearch(state, event.target.value);
             },
           }),
-          
-          state.browsing.historyId && h('div', {
-            class: 'absolute',
-            style: {
-              left: '50%',
-              top: '120%',
-              width: '260px',
-              marginLeft: '-130px',
-              overflow: 'visible',
-            }
-          }, [
-            h('button', {
-              type: 'button',
-              class: 'border border-gray-200 rounded p-1 px-2 bg-gray-600 text-gray-100 w-full shadow',
-              onclick: (state, event) => {
-                event.preventDefault();
-                return actions.SelectBrowsingHistoryId(state, null);
-              }
-            }, text('Resume Following Updates'))
-          ])
         ]),
         h(
           'div',
@@ -120,7 +116,17 @@ export const create = (node) => app({
         ),
       ]),
       state.browsing.historyId && Container([
-        Header('Inspector', []),
+        Header(
+          H1(text('Inspector')),
+          h('button', {
+            type: 'button',
+            class: 'border border-gray-200 rounded p-1 px-2 bg-gray-600 text-gray-100 w-full shadow',
+            onclick: (state, event) => {
+              event.preventDefault();
+              return actions.SelectBrowsingHistoryId(state, null);
+            }
+          }, text('Collapse >')),
+        ),
         
         h('details', { class: 'flex-shrink', open: state.browsing.expand.state }, [
           h('summary', { class: 'text-md font-bold '}, text('State')),
@@ -129,18 +135,26 @@ export const create = (node) => app({
         
         h('details', { class: 'flex-shrink', open: state.browsing.expand.subscriptions }, [
           h('summary', { class: 'text-md font-bold '}, text('Subscriptions')),
+          h(
+            'ul',
+            {},
+            getInspectorSubscriptions(state).map(sub => h(
+              'li',
+              {
+                class: 'mb-2 py-1 px-2 bg-yellow-200 text-gray-600'
+              },
+              text(sub.label)
+            ))
+          ),
         ]),
       ]),
     ]
   ),
 
   subscriptions: (_state) => [
-    Listener({
-      rootElement: node,
-      eventName: 'hyperapp-debug',
-      onAction: actions.AddAction,
-      onEffect: actions.AddEffect,
-      onSubscriptions: actions.AddSubscriptions,
+    ChromeRuntimeConnection({
+      onHistoryAdd: actions.AddHistoryItem,
+      onHistoryReset: actions.ResetHistory,
     }),
   ],
   

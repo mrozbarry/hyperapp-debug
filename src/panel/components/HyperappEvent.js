@@ -2,10 +2,19 @@ import { h, text } from 'hyperapp';
 
 import * as actions from '../actions.js';
 
+const timeOffset = (event) => {
+  if (event.timestampOffset === null) return '';
+
+  const milliseconds = event.timestampOffset || 0;
+  const seconds = (milliseconds / 1000).toFixed(2);
+  const sign = milliseconds >= 0 ? '+' : '-';
+  return `${sign}${seconds}s`;
+}
+
 const classes = {
   'action': ['border-blue-600'],
   'effect': ['border-red-600'],
-  'subscription': ['border-yellow-600'],
+  'subscription': ['border-yellow-200'],
 }
 
 export const HyperappEvent = (event, isSelected) => h(
@@ -30,9 +39,12 @@ export const HyperappEvent = (event, isSelected) => h(
         }
       }),
     ]),
-    h('div', {}, [
-      h('div', { class: 'text-normal leading-none' }, text(`${event.name}(${JSON.stringify(event.props)})`)),
+    h('div', { class: 'flex-grow' }, [
+      h('div', { class: 'text-normal leading-none' }, text(event.label)),
       h('small', { class: 'text-xs uppercase text-gray-400 leading-none' }, text(event.type)),
+    ]),
+    h('div', { class: 'flex-shrink' }, [
+      text(`${timeOffset(event)}`),
     ]),
   ]
 );
