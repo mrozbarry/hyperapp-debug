@@ -1,19 +1,15 @@
 # <img height=24 src=https://cdn.rawgit.com/JorgeBucaran/f53d2c00bafcf36e84ffd862f0dc2950/raw/882f20c970ff7d61aa04d44b92fc3530fa758bc0/Hyperapp.svg> Hyperapp Debug
 
-[![Mozilla Add-on](https://img.shields.io/amo/dw/hyperapp-debug-dev-tools)](https://addons.mozilla.org/en-US/firefox/addon/hyperapp-debug-dev-tools/)
 [![Travis CI](https://img.shields.io/travis/mrozbarry/hyperapp-debug.svg)](https://travis-ci.org/mrozbarry/hyperapp-debug)
 [![npm](https://img.shields.io/npm/v/hyperapp-debug.svg)](https://www.npmjs.com/package/hyperapp-debug)
-[![Slack](https://hyperappjs.herokuapp.com/badge.svg)](https://hyperappjs.herokuapp.com "Join us")
-
-![](./docs/firefox-screenshot.png)
+[![Discord](https://img.shields.io/discord/804672552348680192)](https://discord.gg/QxY8SEVBsz)
 
 A debugger for your [Hyperapp](https://github.com/hyperapp/hyperapp) applications.
 
 ## What is it
 
-[hyperapp-debug](https://github.com/mrozbarry/hyperapp-debug) is a browser extension and higher-order app wrapper for your hyperapp applications.
-It is a tool similar to redux-dev-tools or vue-dev-tools, with tighter integration to the Hyperapp paradigm.
-To debug your application, you must install the browser extension. Don't worry, I don't collect any information at all, and the addon will always be free.
+[hyperapp-debug](https://github.com/mrozbarry/hyperapp-debug) is a debugger for your hyperapp development flow.
+It gives you insight into state transitions, when effects are fired, or if you have stubborn subscriptions.
 
 ## Hyperapp V1
 
@@ -31,14 +27,14 @@ Then with a module bundler like [Rollup](https://rollupjs.org) or [Webpack](http
 
 ```js
 import { app, h } from 'hyperapp';
-import withDebug from 'hyperapp-debug';
+import { debuggable } from 'hyperapp-debug';
 ```
 
 Or with `<script type="module">` and unpkg:
 
 ```js
 import { app, h } from 'https://unpkg.com/hyperapp?module=1';
-import withDebug from 'https://unpkg.com/hyperapp-debug?module=1';
+import { debuggable } from 'https://unpkg.com/hyperapp-debug?module=1';
 ```
 
 If you don't want to set up a build environment, you can download Hyperapp Debug from a CDN like [unpkg.com](https://unpkg.com/hyperapp-debug), and it will be globally available through the <samp>window['hyperapp-debug'].default</samp> object.
@@ -52,7 +48,7 @@ hyperapp-debug supports all ES5-compliant browsers, including Internet Explorer 
 <body>
   <script>
     const { app, h } = window.hyperapp;
-    const withDebug = window['hyperapp-debug'].default;
+    const { debuggable } = window['hyperapp-debug'];
     // Your code here...
   </script>
 </body>
@@ -64,17 +60,25 @@ Use <samp>debug</samp> to wrap Hyperapp's <samp>app</samp> function.
 
 ```js
 import { app } from 'hyperapp';
-import withDebug from 'hyperapp-debug';
+import { debuggable, adapters } from 'hyperapp-debug';
 
-withDebug(app)({
+debuggable(app)({
   init: {},
   view: () => null,
   subscriptions: () => [],
   node: document.getElementById('your-app'),
+  debugAdapter: adapters.ConsoleAdapter,
+  debugId: 'your-custom-id',
 });
 ```
 
-The debugger will only work if you also install the Firefox/Chrome Extension.
+## Adapters
+
+### ConsoleAdapter
+
+If you're a console junkie like me, you will probably enjoy the console debugger.
+It's just is to stay out of the way of your application's DOM while providing a delightfully small globally accessible API to your applications.
+In fact, if you don't specify a debugAdapter in your application properties, this is the default!
 
 ## History
 
@@ -90,5 +94,4 @@ Hyperapp Debug is MIT licensed. See [LICENSE.md](LICENSE.md).
 
 ## Other similar tools
 
- - [hyperapp-redux-devtools](https://github.com/andyrj/hyperapp-redux-devtools)
  - [hyperapp-devtools](https://github.com/hyperstart/hyperapp-devtools)

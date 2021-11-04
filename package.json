@@ -8,36 +8,24 @@
   "license": "MIT",
   "repository": "github:mrozbarry/hyperapp-debug",
   "scripts": {
-    "build:tailwind": "yarn dlx tailwindcss -o src/panel/tailwind.css",
-    "start:testbed": "parcel serve ./src/test-bed/index.html",
-    "start:panel": "parcel serve ./src/panel/index.html",
-    "build:panel": "parcel build -d browser-extension/panel -o index --public-url \"/panel/\" ./src/panel/index.html",
-    "start:extension": "yarn build:panel && web-ext run -s ./browser-extension -u http://localhost:1234 -u about:debugging#/runtime/this-firefox",
-    "build:extension:firefox": "web-ext build -s ./browser-extension --artifacts-dir ./release/",
-    "build:extension:chrome": "yarn build:extension:chrome:signed && yarn build:extension:chrome:unsigned",
-    "build:extension:chrome:signed": "crx pack ./src/browser-extension -o ./release/hyperapp-debug-dev-tools-chrome.crx -p ./key.pem",
-    "build:extension:chrome:unsigned": "crx pack ./src/browser-extension --zip-output ./release/hyperapp-debug-dev-tools-chrome-unsigned.zip -p ./key.pem",
-    "build:hoa": "NODE_ENV=production microbundle build --name withDebug",
-    "build:extension": "mkdir -p release && yarn build:extension:firefox && yarn build:extension:chrome",
-    "start": "concurrently \"yarn start:testbed\" \"sleep 5 && yarn start:extension\"",
-    "prepublishOnly": "yarn build:hoa",
+    "start": "parcel serve ./src/test-bed/index.html",
+    "build": "parcel build ./src/test-bed/index.html",
+    "prepublishOnly": "yarn build",
     "test": "ava",
     "test:coverage": "nyc ava"
   },
   "devDependencies": {
+    "autoprefixer": "latest",
     "ava": "^3.15",
     "concurrently": "^4.1.2",
-    "crx": "^5.0.1",
     "eslint": "^6.4.0",
     "esm": "^3.2.25",
-    "highlight.js": "^11.2.0",
     "hyperapp": "^2.0.18",
-    "jsdom": "^17.0",
     "microbundle": "0.12.0-next.6",
     "nyc": "^15.1",
     "parcel-bundler": "^1.12.5",
     "sinon": "^11.1.2",
-    "web-ext": "^6.3"
+    "tailwindcss": "latest"
   },
   "peerDependencies": {
     "hyperapp": "^2"

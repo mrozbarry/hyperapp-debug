@@ -1,5 +1,5 @@
 import { app, h, text } from 'hyperapp';
-import { HyperappDebug } from '../lib/hyperappDebug.js';
+import { debuggable } from '../lib/hyperappDebug.js';
 
 // Basic Counter
 const Delay = fxProps => [
@@ -47,9 +47,9 @@ const testCase = ({ title, description }, children) => h('section', {}, [
   ]),
 ]);
 
-const hyperappDebug = new HyperappDebug();
+// const hyperappDebug = new HyperappDebug();
 
-const mount = (debugName, node) => hyperappDebug.enhance(app)({
+const mount = (debugName, node) => debuggable(app)({
   init: Init(),
   view: state => h('article', {
     style: {

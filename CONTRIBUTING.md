@@ -41,7 +41,7 @@ Language and versions in use
 
 ## Tests
 
- * TBD. Probably sticking with ava.
+ * Ava and es6 all the way
 
 ## Attribution
 
@@ -49,22 +49,7 @@ This document was originally from [Hyperapp v1's contributing guidelines](https:
 
 ## Running the debugger locally
 
-### With web-ext
-
 ```bash
 yarn
 yarn start
-```
-
-Also open a tab in the new Firefox instance to [about:debugging](about:debugging), click `This Firefox`, and then click the `Inspect` button for the Hyperapp dev tools extension.
-The testbed app is meant to have minimal real-world-ish examples, and should be extended when there are missing use-cases.
-
-### Without web-ext
-
-In chrome, enable developer mode and load an unpacked extension, which ends up being [manifest.json](./src/browser-extension/manifest.json).
-In firefox, open a tab in the new Firefox instance to [about:debugging](about:debugging), click `This Firefox`, and then click `Load Temporary Add-ons...`, and pick [manifest.json](./src/browser-extension/manifest.json).
-
-```bash
-yarn
-yarn start:testbed
 ```
