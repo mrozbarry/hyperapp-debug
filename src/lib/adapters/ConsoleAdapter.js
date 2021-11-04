@@ -25,6 +25,13 @@ const injectGlobalDebug = () => {
       $hyperappDebug.$ = adapter;
       log('Hyperapp Debug', `Default debugging app set to ${debugId}, access with $hyperappDebug.$.<fn>`);
     },
+    list: () => {
+      Object.values($hyperappDebug.app.list).forEach((app) => {
+        log('Hyperapp Debug | Apps', `"${app.adapter.id}"`, app.adapter.appProps.node);
+      });
+
+      return Object.values($hyperappDebug.app.list).map(app => app.adapter);
+    },
     help: () => {
       console.groupCollapsed(...logLeadFormatting('Hyperapp Debug'), 'Expand for some helpful console commands');
 
@@ -50,8 +57,34 @@ const injectGlobalDebug = () => {
       helpLog(
         '<adapter>.resume()', 'resume the application',
         'Allow the application to perform actions, state updates, and running side-effects',
-        'With the default application, $hyperappDebug.$.play()',
-        'With a specific application, $hyperappDebug.app.list[<app id>].play()',
+        'With the default application, $hyperappDebug.$.resume()',
+        'With a specific application, $hyperappDebug.app.list[<app id>].resume()',
+      );
+      helpLog(
+        '<adapter>.back(count = 1)', 'time travel backwards',
+        'Go back to the previous action, or <count> actions ago',
+        'With the default application, $hyperappDebug.$.back()',
+        'With a specific application, $hyperappDebug.app.list[<app id>].back()',
+      );
+      helpLog(
+        '<adapter>.forward(count = 1)', 'time travel forwards',
+        'Go forwards to the next action, or <count> actions in the future',
+        'With the default application, $hyperappDebug.$.forward()',
+        'With a specific application, $hyperappDebug.app.list[<app id>].forward()',
+      );
+      helpLog(
+        '<adapter>.resumeFromHere()', 'create a new timeline, discarding actions from the future',
+        'Resume the app, but discard any future actions that were stored',
+        'Only useful if you have timetraveled the app backwards',
+        'With the default application, $hyperappDebug.$.resumeFromHere()',
+        'With a specific application, $hyperappDebug.app.list[<app id>].resumeFromHere()',
+      );
+      helpLog(
+        '<adapter>.resumeFromEnd()', 'resume debugging the app from the latest action',
+        'Resume the app from the end, even if you have time travelled',
+        'Only useful if you have timetraveled the app backwards, but want to resume',
+        'With the default application, $hyperappDebug.$.resumeFromEnd()',
+        'With a specific application, $hyperappDebug.app.list[<app id>].resumeFromEnd()',
       );
 
       helpLog(
@@ -79,8 +112,8 @@ const injectGlobalDebug = () => {
             subscriptions: true,
           },
         };
-        log('Hyperapp Debug', `Debugging app ${adapter.id}`);
-        if (!$hyperappDebug.defaultDebugId) {
+        log('Hyperapp Debug', `Debugging app ${adapter.id} at`, adapter.appProps.node);
+        if (!$hyperappDebug.$) {
           $hyperappDebug.setDefault(adapter.id);
         }
       },
@@ -92,8 +125,9 @@ const injectGlobalDebug = () => {
 };
 
 export class ConsoleAdapter extends BaseAdapter {
-  constructor(...config) {
-    super(...config);
+  constructor(props) {
+    super(props);
+
     this.log = () => () => {};
   }
 
@@ -104,6 +138,12 @@ export class ConsoleAdapter extends BaseAdapter {
   init() {
     injectGlobalDebug();
     $hyperappDebug.app.register(this);
+  }
+
+  onResume() {
+  }
+
+  onPause() {
   }
 
   onAction(actionFn, props, id) {

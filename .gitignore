@@ -1,10 +1,7 @@
 node_modules
 yarn-*.log
 .cache
-bundle.js
 dist
 withDebug.*
-release
-key.pem
 .nyc_output
 .parcel-cache

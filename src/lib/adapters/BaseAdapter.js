@@ -1,10 +1,10 @@
 export class BaseAdapter {
-  constructor({ id, subscriptions }) {
-    this.id = id || `hyperapp-debug_${Math.random().toString(36).slice(2)}`;
+  constructor({ debugId, ...appProps }) {
+    this.id = debugId || `hyperapp-debug_${Math.random().toString(36).slice(2)}`;
+    this.appProps = appProps;
     this.paused = false;
     this.actions = [];
     this.currentAction = null;
-    this.subscriptionsFn = subscriptions;
     this.originalDispatch = () => {};
     this.dispatch = this.dispatch.bind(this);
     this.subscriptions = this.subscriptions.bind(this);
@@ -21,12 +21,44 @@ export class BaseAdapter {
     console.log('Hyperapp Debug v2');
   }
 
+  onResume() {}
+  onPause() {}
+
   resume() {
     this.paused = false;
+    this.onResume();
   }
 
   pause() {
     this.paused = true;
+    this.onPause();
+  }
+
+  back(count = 1) {
+    const currentIndex = this.actions.findIndex(a => a.id === this.currentAction.id);
+    if (currentIndex === -1) return;
+    this.pause();
+    this.restoreFromAction(this.actions[Math.max(currentIndex - count, 0)].id);
+  }
+
+  forward(count = 1) {
+    const currentIndex = this.actions.findIndex(a => a.id === this.currentAction.id);
+    if (currentIndex === -1) return;
+    this.pause();
+    this.restoreFromAction(this.actions[Math.min(currentIndex + count, this.actions.length - 1)].id);
+  }
+
+  resumeFromHere() {
+    const currentIndex = this.actions.findIndex(a => a.id === this.currentAction.id);
+    if (currentIndex === -1) return;
+    this.history = this.history.slice(0, currentIndex);
+    this.end();
+    this.resume();
+  }
+
+  resumeFromEnd() {
+    this.forward(this.actions.length);
+    this.resume();
   }
 
   dispatch(originalDispatch) {
@@ -57,6 +89,7 @@ export class BaseAdapter {
     if (!action) {
       return console.warn('Unable to restore state, action not found');
     }
+    this.currentAction = action;
 
     return this.originalDispatch(action.state);
   }
@@ -74,6 +107,7 @@ export class BaseAdapter {
       state: null,
       effects: [],
       subscriptions: [],
+      timestamp: Date.now(),
     };
     this.actions.push(this.currentAction);
     this.onAction(actionFn, props, this.currentAction.id);
@@ -89,13 +123,15 @@ export class BaseAdapter {
     this.onEffect(effect[0], effect[1]);
   }
 
-  subscriptions(state) {
-    if (!this.subscriptionsFn) return [];
+  subscriptions(subscriptions) {
+    if (!subscriptions) return undefined; 
 
-    const subs = this.subscriptionsFn(state);
+    return (state) => {
+      const subs = subscriptions(state);
 
-    this.currentAction.subscriptions = subs;
+      this.currentAction.subscriptions = subs;
 
-    return subs;
+      return subs;
+    };
   }
 }

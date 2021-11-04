@@ -49,16 +49,16 @@ const testCase = ({ title, description }, children) => h('section', {}, [
 
 // const hyperappDebug = new HyperappDebug();
 
-const mount = (debugName, node) => debuggable(app)({
+const mount = (debugId, node) => debuggable(app)({
   init: Init(),
-  view: state => h('article', {
+  view: state => h('div', {}, h('article', {
     style: {
       paddingBottom: '0.5rem',
       marginBottom: '0.5rem',
       borderBottom: '1px #eee solid',
     },
   }, [
-    h('h1', {}, text(debugName)),
+    h('h1', {}, text(debugId)),
 
     testCase({
       title: 'Basic Counter',
@@ -78,15 +78,15 @@ const mount = (debugName, node) => debuggable(app)({
       h('button', { type: 'button', style: { display: 'block' }, onclick: IntervalToggle }, text(`Turn ${state.runInterval ? 'OFF' : 'ON'} Interval`)),
     ]),
 
-  ]),
+  ])),
   subscriptions: state => [
     state.runInterval && Interval({ every: 1000, action: IntervalTick }),
   ],
   node,
-  debugName,
+  debugId,
 });
 
 mount('Test Bed 1', document.getElementById('app1'))
-//mount('Test Bed 2', document.getElementById('app2'))
+mount('Test Bed 2', document.getElementById('app2'))
 //mount('Test Bed 3', document.getElementById('app3'))
 
