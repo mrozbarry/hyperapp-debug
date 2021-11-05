@@ -19,11 +19,18 @@ const injectGlobalDebug = () => {
   };
 
   window.$hyperappDebug = {
-    setDefault: (debugId) => {
-      const { adapter } = $hyperappDebug.app.list[debugId];
+    setApp: (debugIdOrNode) => {
+      let { adapter } = $hyperappDebug.app.list[debugIdOrNode];
+      if (!adapter) {
+        const app = Object.values($hyperappDebug.app.list).find(a => a.adapter.node === debugIdOrNode);
+        if (app) {
+          adapter = app.adapter;
+        }
+      }
       if (!adapter) return;
+
       $hyperappDebug.$ = adapter;
-      log('Hyperapp Debug', `Default debugging app set to ${debugId}, access with $hyperappDebug.$.<fn>`);
+      log('Hyperapp Debug', `Default debugging app set to "${adapter.id}"`, adapter.appProps.node, ', access with $hyperappDebug.$.<fn>');
     },
     list: () => {
       Object.values($hyperappDebug.app.list).forEach((app) => {
@@ -36,9 +43,10 @@ const injectGlobalDebug = () => {
       console.groupCollapsed(...logLeadFormatting('Hyperapp Debug'), 'Expand for some helpful console commands');
 
       helpLog(
-        '<debugger>.setDefault(debugId)', 'set the default adapter to debug',
+        '<debugger>.setApp(debugId)', 'set the default adapter to debug',
         'Resets the state of the application to what it was after the specified action',
-        'With the global object, $hyperappDebug.setDefault("your debug id")',
+        'With the global object and debug id, $hyperappDebug.setApp("your debug id")',
+        'With the global object and app root node, $hyperappDebug.setApp(document.querySelector("#id"))',
       );
 
       helpLog(
@@ -88,7 +96,7 @@ const injectGlobalDebug = () => {
       );
 
       helpLog(
-        'help()', 'get this help text',
+        '<debugger>.help()', 'get this help text',
         'Get documentation on how to use the console adapter',
         '$hyperappDebug.help()',
       );
@@ -98,7 +106,10 @@ const injectGlobalDebug = () => {
       list: {},
       register: (adapter) => {
         const appLog = type => (...args) => {
-          if (!$hyperappDebug.app.list[adapter.id].logging[type]) return;
+          if (!$hyperappDebug.app.list[adapter.id].logging[type]) {
+            console.log('skipping', type);
+            return;
+          }
           log(`DEBUG.${type}`, ...args);
         };
         adapter.setLog(appLog);
@@ -106,15 +117,15 @@ const injectGlobalDebug = () => {
         window.$hyperappDebug.app.list[adapter.id] = {
           adapter,
           logging: {
-            actions: true,
-            state: true,
+            action: true,
+            state: false,
             effects: true,
             subscriptions: true,
           },
         };
         log('Hyperapp Debug', `Debugging app ${adapter.id} at`, adapter.appProps.node);
         if (!$hyperappDebug.$) {
-          $hyperappDebug.setDefault(adapter.id);
+          $hyperappDebug.setApp(adapter.id);
         }
       },
     },
@@ -128,7 +139,10 @@ export class ConsoleAdapter extends BaseAdapter {
   constructor(props) {
     super(props);
 
-    this.log = () => () => {};
+    this.log = (type) => (...data) => (
+      $hyperappDebug.app.list[this.id].logging[type]
+        && console.info(this.id, '|', type, ...data)
+    );
   }
 
   setLog(logFn) {
@@ -158,7 +172,8 @@ export class ConsoleAdapter extends BaseAdapter {
     this.log('effect')(effectFn.name || '$AnonymousEffect', props);
   }
 
-  onSubscriptions(subscriptions) {
-    this.log('subscriptions')(subscriptions);
+  onSubscriptions(_subscriptions, { started, stopped }) {
+    if (started.length) this.log('subscriptions')('started', started);
+    if (stopped.length) this.log('subscriptions')('stopped', stopped);
   }
 };

@@ -34,38 +34,58 @@ export class BaseAdapter {
     this.onPause();
   }
 
+  state() {
+    return { ...this.currentAction.state };
+  }
+
   back(count = 1) {
     const currentIndex = this.actions.findIndex(a => a.id === this.currentAction.id);
     if (currentIndex === -1) return;
     this.pause();
-    this.restoreFromAction(this.actions[Math.max(currentIndex - count, 0)].id);
+    return this.restoreFromAction(this.actions[Math.max(currentIndex - count, 0)].id);
   }
 
   forward(count = 1) {
     const currentIndex = this.actions.findIndex(a => a.id === this.currentAction.id);
     if (currentIndex === -1) return;
     this.pause();
-    this.restoreFromAction(this.actions[Math.min(currentIndex + count, this.actions.length - 1)].id);
+    return this.restoreFromAction(this.actions[Math.min(currentIndex + count, this.actions.length - 1)].id);
   }
 
   resumeFromHere() {
     const currentIndex = this.actions.findIndex(a => a.id === this.currentAction.id);
     if (currentIndex === -1) return;
     this.history = this.history.slice(0, currentIndex);
-    this.end();
-    this.resume();
+    return this.resumeFromEnd();
   }
 
   resumeFromEnd() {
-    this.forward(this.actions.length);
+    const state = this.forward(this.actions.length);
     this.resume();
+    return state;
+  }
+
+  restoreFromAction(actionId) {
+    const action = this.actions.find(a => a.id === actionId);
+    if (!action) {
+      return console.warn('Unable to restore state, action not found');
+    }
+    this.currentAction = action;
+
+    this.originalDispatch(action.state);
+    return action.state;
   }
 
   dispatch(originalDispatch) {
     this.originalDispatch = originalDispatch;
 
     return (action, props) => {
-      if (this.paused) return;
+      if (this.paused) {
+        if (typeof action === 'function') {
+          console.warn(`Hyperapp Debugger has prevented ${this.id} from running an action (${action.name}) because this application is paused.`);
+        }
+        return;
+      }
 
       const isActionWithProps = typeof action === 'function';
       const isStateEffectTuple = Array.isArray(action);
@@ -84,20 +104,10 @@ export class BaseAdapter {
     };
   }
 
-  restoreFromAction(actionId) {
-    const action = this.actions.find(a => a.id === actionId);
-    if (!action) {
-      return console.warn('Unable to restore state, action not found');
-    }
-    this.currentAction = action;
-
-    return this.originalDispatch(action.state);
-  }
-
   onAction(_actionFn, _props, _id) {}
   onState(_state) {}
   onEffect(_effectFn, _props) {}
-  onSubscriptions(_subs) {}
+  onSubscriptions(_subs, _details) {}
 
   storeAction(actionFn, props) {
     this.currentAction = {
@@ -106,7 +116,12 @@ export class BaseAdapter {
       props,
       state: null,
       effects: [],
-      subscriptions: [],
+      subscriptions: {
+        sequence: [],
+        started: [],
+        stablized: [],
+        stopped: [],
+      },
       timestamp: Date.now(),
     };
     this.actions.push(this.currentAction);
@@ -127,11 +142,22 @@ export class BaseAdapter {
     if (!subscriptions) return undefined; 
 
     return (state) => {
-      const subs = subscriptions(state);
+      const nextSubs = subscriptions(state);
 
-      this.currentAction.subscriptions = subs;
+      const started = [];
+      const stabilized = [];
+      const stopped = [];
 
-      return subs;
+      this.currentAction.subscriptions = {
+        sequence: nextSubs,
+        started,
+        stabilized,
+        stopped,
+      };
+
+      this.onSubscriptions(this.currentAction.subscriptions.sequence, this.currentAction.subscriptions)
+
+      return nextSubs;
     };
   }
 }
