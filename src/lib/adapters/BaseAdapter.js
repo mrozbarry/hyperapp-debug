@@ -111,7 +111,7 @@ export class BaseAdapter {
 
   storeAction(actionFn, props) {
     this.currentAction = {
-      id: `${this.id}.${actionFn.name || 'action'}.${Date.now()}`,
+      id: `${actionFn.name || 'action'}.${Date.now()}`,
       actionFn,
       props,
       state: null,

@@ -105,15 +105,6 @@ const injectGlobalDebug = () => {
     app: {
       list: {},
       register: (adapter) => {
-        const appLog = type => (...args) => {
-          if (!$hyperappDebug.app.list[adapter.id].logging[type]) {
-            console.log('skipping', type);
-            return;
-          }
-          log(`DEBUG.${type}`, ...args);
-        };
-        adapter.setLog(appLog);
-
         window.$hyperappDebug.app.list[adapter.id] = {
           adapter,
           logging: {
@@ -138,15 +129,12 @@ const injectGlobalDebug = () => {
 export class ConsoleAdapter extends BaseAdapter {
   constructor(props) {
     super(props);
-
-    this.log = (type) => (...data) => (
-      $hyperappDebug.app.list[this.id].logging[type]
-        && console.info(this.id, '|', type, ...data)
-    );
   }
 
-  setLog(logFn) {
-    this.log = logFn;
+  log(type) {
+    return $hyperappDebug.app.list[this.id] && $hyperappDebug.app.list[this.id].logging[type]
+      ? ((...data) => console.info(`"${this.id}"`, '|', type, ...data))
+      : (() => {})
   }
 
   init() {
@@ -161,7 +149,7 @@ export class ConsoleAdapter extends BaseAdapter {
   }
 
   onAction(actionFn, props, id) {
-    this.log('action')(`<id=${id}>`, actionFn.name || '$AnonymousAction', props);
+    this.log('action')(`"${id}"`, actionFn.name || '$AnonymousAction', props);
   }
 
   onState(state) {
