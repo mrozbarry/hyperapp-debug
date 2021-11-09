@@ -1,5 +1,5 @@
 import { app, h, text } from 'hyperapp';
-import { debuggable } from '../lib/hyperappDebug.js';
+import { debuggable, adapters } from '../lib/index.js';
 
 // Basic Counter
 const Delay = fxProps => [
@@ -18,23 +18,33 @@ const AddWithDelay = state => [
 ];
 
 // Interval Counter
-const IntervalToggle = state => ({ ...state, runInterval: !state.runInterval });
+const IntervalToggle = (state, { runInterval }) => ({ ...state, runInterval: state.runInterval ? null : runInterval });
 const IntervalTick = state => ({ ...state, intervalValue: state.intervalValue + 1 });
+function IntervalSub(dispatch, props) {
+  const interval = setInterval(() => {
+    dispatch(props.action);
+  }, props.every);
+  return () => {
+    clearInterval(interval);
+  };
+};
 const Interval = subProps => [
-  function IntervalSub(dispatch, props) {
-    const interval = setInterval(() => {
-      dispatch(props.action);
-    }, props.every);
-    return () => {
-      clearInterval(interval);
-    };
-  },
+  subProps.good
+    ? IntervalSub
+    : function InlinedIntervalSub(dispatch, props) {
+      const interval = setInterval(() => {
+        dispatch(props.action);
+      }, props.every);
+      return () => {
+        clearInterval(interval);
+      };
+    },
   subProps,
 ]
 
 const Init = () => ({
   value: 0,
-  runInterval: false,
+  runInterval: null,
   intervalValue: 0,
 });
 
@@ -75,15 +85,24 @@ const mount = (debugId, node) => debuggable(app)({
       description: 'Testing effects via subscriptions',
     }, [
       h('strong', {}, text(state.intervalValue.toString())),
-      h('button', { type: 'button', style: { display: 'block' }, onclick: IntervalToggle }, text(`Turn ${state.runInterval ? 'OFF' : 'ON'} Interval`)),
+      state.runInterval && (
+        h('button', { type: 'button', style: { display: 'block' }, onclick: IntervalToggle }, text(`Turn OFF Interval`))
+      ),
+      !state.runInterval && h('div', {}, [
+        h('button', { type: 'button', style: { display: 'block' }, onclick: (state) => IntervalToggle(state, { runInterval: 'good' }) }, text(`Turn ON Good Interval`)),
+        h('button', { type: 'button', style: { display: 'block' }, onclick: (state) => IntervalToggle(state, { runInterval: 'bad' }) }, text(`Turn ON Bad Interval`)),
+      ]),
     ]),
 
   ])),
   subscriptions: state => [
-    state.runInterval && Interval({ every: 1000, action: IntervalTick }),
+    state.runInterval && Interval({ every: 1000, action: IntervalTick, good: state.runInterval === 'good' }),
   ],
   node,
-  debugId,
+  debug: {
+    id: debugId,
+    adapter: adapters.ConsoleAdapter.use,
+  },
 });
 
 mount('Test Bed 1', document.getElementById('app1'))

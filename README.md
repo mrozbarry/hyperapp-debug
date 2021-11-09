@@ -56,7 +56,7 @@ hyperapp-debug supports all ES5-compliant browsers, including Internet Explorer 
 
 ## Usage
 
-Use <samp>debug</samp> to wrap Hyperapp's <samp>app</samp> function.
+Use <samp>debuggable</samp> to wrap Hyperapp's <samp>app</samp> function.
 
 ```js
 import { app } from 'hyperapp';
@@ -67,18 +67,17 @@ debuggable(app)({
   view: () => null,
   subscriptions: () => [],
   node: document.getElementById('your-app'),
-  debugAdapter: adapters.ConsoleAdapter,
-  debugId: 'your-custom-id',
+  debug: {
+    enable: true,
+    adapter: adapters.ConsoleAdapter.use,
+    id: 'your-custom-id',
+  },
 });
 ```
 
 ## Adapters
 
-### ConsoleAdapter
-
-If you're a console junkie like me, you will probably enjoy the console debugger.
-It's just is to stay out of the way of your application's DOM while providing a delightfully small globally accessible API to your applications.
-In fact, if you don't specify a debugAdapter in your application properties, this is the default!
+Check out the [Adapters](./docs/Adapters.md) documentation.
 
 ## History
 
