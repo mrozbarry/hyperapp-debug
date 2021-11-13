@@ -1,5 +1,5 @@
 import { app, h, text } from 'hyperapp';
-import { debuggable, adapters } from '../lib/index.js';
+import { debuggable, adapters } from '../../hyperapp-debug.module.js';
 
 // Basic Counter
 const Delay = fxProps => [
@@ -100,6 +100,7 @@ const mount = (debugId, node) => debuggable(app)({
   ],
   node,
   debug: {
+    enable: true,
     id: debugId,
     adapter: adapters.ConsoleAdapter.use,
   },

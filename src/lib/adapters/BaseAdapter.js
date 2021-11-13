@@ -3,21 +3,21 @@ const makeId = () => Math.random().toString(36).slice(2, 8);
 export class BaseAdapter {
   constructor({ debug, ...appProps }) {
     this.id = debug.id || `hyperapp-debug_${Math.random().toString(36).slice(2)}`;
-    this.enabled = debug.enabled || true;
     this.appProps = appProps;
     this.paused = false;
     this.actions = [];
     this.currentAction = null;
-    this.originalDispatch = () => {};
-    this.augmentedDispatch = () => {};
+    this.latestAction = null;
+    this.originalDispatch = () => { };
+    this.augmentedDispatch = () => { };
     this.dispatchOverride = this.dispatchOverride.bind(this);
     this.subscriptionsOverride = this.subscriptionsOverride.bind(this);
 
     this.init();
 
     this.storeAction(
-      function init() {},
-      {},
+      function init() { },
+      undefined,
     );
   }
 
@@ -25,9 +25,9 @@ export class BaseAdapter {
     console.log('Hyperapp Debug v2');
   }
 
-  onResume() {}
-  onPause() {}
-  onWarning(_warning) {}
+  onResume() { }
+  onPause() { }
+  onWarning(_warning) { }
 
   history() {
     return [...this.actions];
@@ -58,24 +58,50 @@ export class BaseAdapter {
   }
 
   back(count = 1) {
-    const currentIndex = this.actions.findIndex(a => a.id === this.currentAction.id);
-    if (currentIndex === -1) return;
+    let action = this.currentAction;
+    for (let num = 0; num < count && action; num++) {
+      action = action.previousAction || action;
+    }
     this.pause();
-    return this.restoreFromAction(this.actions[Math.max(currentIndex - count, 0)]);
+    return this.restoreFromAction(action);
   }
 
-  forward(count = 1) {
-    const currentIndex = this.actions.findIndex(a => a.id === this.currentAction.id);
-    if (currentIndex === -1) return;
-    this.pause();
-    return this.restoreFromAction(this.actions[Math.min(currentIndex + count, this.actions.length - 1)]);
+  alternateFutures() {
+    const { nextActions }  = this.currentAction;
+    return Object.keys(nextActions).reduce((futures, key) => ({
+      ...futures,
+      [key]: {
+        state: nextActions[key].state,
+        timestamp: nextActions[key].timestamp,
+        pick: () => this.forward(1, key),
+      },
+    }), {});
   }
 
-  resumeFromHere() {
-    const currentIndex = this.actions.findIndex(a => a.id === this.currentAction.id);
-    if (currentIndex === -1) return;
-    this.actions = this.actions.slice(0, currentIndex);
-    return this.resumeFromEnd();
+  forward(count = 1, actionIdStream = undefined) {
+    let action = this.currentAction;
+    for (let num = 0; num < count && action; num++) {
+      const nextActions = Object.values(action.nextActions);
+      if (nextActions.length === 1) {
+        action = nextActions[0];
+      } else if (nextActions.length > 1) {
+        if (!action.nextActions[actionIdStream]) {
+          console.warn('Unable to time-travel forward without picking a future stream action id')
+          break;
+        }
+        action = action.nextActions[actionIdStream] || action;
+      }
+    }
+    this.pause();
+    return this.restoreFromAction(action);
+  }
+
+  resumeHere() {
+    if (this.lastAction !== this.currentAction) {
+      console.warn('Creating a new future stream from the current action');
+      this.latestAction = this.currentAction;
+    }
+    this.resume();
   }
 
   restoreFromAction(action) {
@@ -85,19 +111,8 @@ export class BaseAdapter {
     return action.state;
   }
 
-  restoreFromActionId(actionId) {
-    const action = this.actions.find(a => a.id === actionId);
-    if (!action) {
-      return console.warn('Unable to restore state, action not found');
-    }
-
-    return this.restoreFromAction(actionId);
-  }
-
   dispatchOverride() {
     return (originalDispatch) => {
-      if (!this.enabled) return originalDispatch;
-
       this.originalDispatch = originalDispatch;
 
       this.augmentedDispatch = (action, props) => {
@@ -128,14 +143,19 @@ export class BaseAdapter {
     };
   }
 
-  onAction(_actionFn, _props, _id) {}
-  onState(_state) {}
-  onEffect(_effectFn, _props) {}
-  onSubscriptions(_subs, _details) {}
+  onAction(_actionFn, _props, _id) { }
+  onState(_state) { }
+  onEffect(_effectFn, _props) { }
+  onSubscriptions(_subs, _details) { }
 
   storeAction(actionFn, props) {
+    const previousAction = this.latestAction;
+    const id = `${actionFn.name || 'action'}.${Date.now()}`;
+
     this.currentAction = {
-      id: `${actionFn.name || 'action'}.${Date.now()}`,
+      previousAction,
+      nextActions: {},
+      id,
       actionFn,
       props,
       state: null,
@@ -148,6 +168,12 @@ export class BaseAdapter {
       },
       timestamp: Date.now(),
     };
+
+    if (previousAction) {
+      previousAction.nextActions[id] = this.currentAction;
+    }
+    this.latestAction = this.currentAction;
+
     this.actions.push(this.currentAction);
     this.onAction(actionFn, props, this.currentAction.id);
   }
@@ -163,13 +189,12 @@ export class BaseAdapter {
   }
 
   subscriptionsOverride() {
-    if (!this.appProps.subscriptions) return undefined; 
+    if (!this.appProps.subscriptions) return undefined;
 
     const sameProps = (a, b) => Object.keys({ ...a, ...b }).every(k => a[k] == b[k]);
 
     return (state) => {
       const nextSubs = this.appProps.subscriptions(state);
-      if (!this.enabled) return nextSubs;
 
       const sequence = nextSubs
         .filter(s => s)
@@ -187,13 +212,13 @@ export class BaseAdapter {
       const started = [];
       const stabilized = [];
 
-      for(let nextIndex = 0; nextIndex < sequence.length; nextIndex++) {
+      for (let nextIndex = 0; nextIndex < sequence.length; nextIndex++) {
         const nextSub = sequence[nextIndex];
         if (!nextSub) continue;
 
         const prevIndex = stopped.findIndex(({ effect, props }) => (
           nextSub.effect === effect
-            && sameProps(nextSub.props, props)
+          && sameProps(nextSub.props, props)
         ));
 
         if (prevIndex >= 0) {
@@ -219,9 +244,9 @@ export class BaseAdapter {
           if (count > 1) return;
           return started.some(s => (
             s.effect.name === effect.name
-              && sameProps(props, s.props)
-              && s.count === 1
-              && s.effect.toString() === effect.toString()
+            && sameProps(props, s.props)
+            && s.count === 1
+            && s.effect.toString() === effect.toString()
           ));
         })
         .forEach((badSub) => {

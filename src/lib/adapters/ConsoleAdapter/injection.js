@@ -41,12 +41,9 @@ export const injectGlobalDebug = () => {
               .forEach(logHelp);
           });
       };
+      const searchRegexp = new RegExp(search, 'ig');
       const roots = search
-        ? helpTopics.filter(ht => ht.data.length > 0 && (
-          ht.topic.includes(search) 
-          || ht.summary.includes(search)
-          || ht.data.join(' ').includes(search)
-        ))
+        ? helpTopics.filter(ht => ht.data.length > 0 && searchRegexp.test(`${ht.topic} ${ht.summary} ${ht.data.join(' ')}`))
         : helpTopics.filter(ht => ht.parent === null);
 
       defaultLog('Hyperapp Debug Help', search ? `Results for "${search}"` : 'Expand for details')
@@ -59,14 +56,14 @@ export const injectGlobalDebug = () => {
       adapter.$logging = {
         action: true,
         state: false,
-        effects: true,
+        effect: true,
         subscriptions: true,
       };
       adapter.logging = (options) => {
         if (options) {
           if (typeof options === 'string') {
             const trimmed = options.replace(/^\!/, '');
-            adapter.$logging[trimmed] = option === trimmed;
+            adapter.$logging[trimmed] = options === trimmed;
           } else if (Object(options) === options) {
             adapter.$logging = {
               ...adapter.$logging,
