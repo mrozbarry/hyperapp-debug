@@ -1,5 +1,5 @@
 import { app, h, text } from 'hyperapp';
-import { debuggable, adapters } from '../../hyperapp-debug.module.js';
+import { debuggable } from '../../hyperapp-debug.js';
 
 // Basic Counter
 const Delay = fxProps => [
@@ -65,7 +65,6 @@ const mount = (debugId, node) => debuggable(app)({
     style: {
       paddingBottom: '0.5rem',
       marginBottom: '0.5rem',
-      borderBottom: '1px #eee solid',
     },
   }, [
     h('h1', {}, text(debugId)),
@@ -102,11 +101,11 @@ const mount = (debugId, node) => debuggable(app)({
   debug: {
     enable: true,
     id: debugId,
-    adapter: adapters.ConsoleAdapter.use,
+    // adapter: adapters.ConsoleAdapter.use,
   },
 });
 
 mount('Test Bed 1', document.getElementById('app1'))
 mount('Test Bed 2', document.getElementById('app2'))
-//mount('Test Bed 3', document.getElementById('app3'))
+mount('Test Bed 3', document.getElementById('app3'))
 
