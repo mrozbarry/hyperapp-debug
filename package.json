@@ -1,6 +1,7 @@
 {
   "name": "hyperapp-debug",
   "version": "2.0.0-beta.8",
+  "type": "module",
   "main": "hyperapp-debug.umd.js",
   "module": "hyperapp-debug.js",
   "license": "MIT",

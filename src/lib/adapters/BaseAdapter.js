@@ -1,268 +1,179 @@
 const makeId = () => Math.random().toString(36).slice(2, 8);
 
-export class BaseAdapter {
-  constructor({ debug, ...appProps }) {
-    this.id = debug.id || `hyperapp-debug_${Math.random().toString(36).slice(2)}`;
-    this.appProps = appProps;
-    this.paused = false;
-    this.actions = [];
-    this.currentAction = null;
-    this.latestAction = null;
-    this.originalDispatch = () => { };
-    this.augmentedDispatch = () => { };
-    this.dispatchOverride = this.dispatchOverride.bind(this);
-    this.subscriptionsOverride = this.subscriptionsOverride.bind(this);
+export const make = (name) => {
+  const events = {
+    log: [],
+    debug: [],
+    info: [],
+    warn: [],
+    error: [],
+    onPause: [],
+    onResume: [],
+    onWarning: [],
+    onAction: [],
+    onState: [],
+    onEffect: [],
+    onSubscriptionStart: [],
+    onSubscriptionEnd: [],
+  };
 
-    this.init();
+  const schedule =
+    window.requestIdleCallback || ((fn) => window.setTimeout(fn, 0));
 
-    this.storeAction(
-      function init() { },
-      undefined,
-    );
-  }
+  const self = {
+    history: [],
+    currentAction: {
+      name: "",
+      fn: null,
+      props: null,
+      state: null,
+      effects: [],
+    },
+    historyIndex: null,
+    pausedAt: null,
+    parentDispatch: null,
+  };
 
-  init() {
-    console.log('Hyperapp Debug v2');
-  }
-
-  onResume() { }
-  onPause() { }
-  onWarning(_warning) { }
-
-  history() {
-    return [...this.actions];
-  }
-
-  dispatch(actionFn, props, recorded = true) {
-    return recorded
-      ? this.augmentedDispatch(actionFn, props)
-      : this.originalDispatch(actionFn, props);
-  }
-
-  resume() {
-    this.paused = false;
-    this.onResume();
-  }
-
-  pause() {
-    this.paused = true;
-    this.onPause();
-  }
-
-  state() {
-    return { ...this.currentAction.state };
-  }
-
-  subscriptions() {
-    return [...this.currentAction.subscriptions.sequence];
-  }
-
-  back(count = 1) {
-    let action = this.currentAction;
-    for (let num = 0; num < count && action; num++) {
-      action = action.previousAction || action;
-    }
-    this.pause();
-    return this.restoreFromAction(action);
-  }
-
-  alternateFutures() {
-    const { nextActions }  = this.currentAction;
-    return Object.keys(nextActions).reduce((futures, key) => ({
-      ...futures,
-      [key]: {
-        state: nextActions[key].state,
-        timestamp: nextActions[key].timestamp,
-        pick: () => this.forward(1, key),
-      },
-    }), {});
-  }
-
-  forward(count = 1, actionIdStream = undefined) {
-    let action = this.currentAction;
-    for (let num = 0; num < count && action; num++) {
-      const nextActions = Object.values(action.nextActions);
-      if (nextActions.length === 1) {
-        action = nextActions[0];
-      } else if (nextActions.length > 1) {
-        if (!action.nextActions[actionIdStream]) {
-          console.warn('Unable to time-travel forward without picking a future stream action id')
-          break;
-        }
-        action = action.nextActions[actionIdStream] || action;
-      }
-    }
-    this.pause();
-    return this.restoreFromAction(action);
-  }
-
-  resumeHere() {
-    if (this.lastAction !== this.currentAction) {
-      console.warn('Creating a new future stream from the current action');
-      this.latestAction = this.currentAction;
-    }
-    this.resume();
-  }
-
-  restoreFromAction(action) {
-    this.currentAction = action;
-
-    this.dispatch(action.state, undefined, false);
-    return action.state;
-  }
-
-  dispatchOverride() {
-    return (originalDispatch) => {
-      this.originalDispatch = originalDispatch;
-
-      this.augmentedDispatch = (action, props) => {
-        if (this.paused) {
-          if (typeof action === 'function') {
-            console.warn(`Hyperapp Debugger has prevented ${this.id} from running an action (${action.name}) because this application is paused.`);
-          }
-          return;
-        }
-
-        const isActionWithProps = typeof action === 'function';
-        const isStateEffectTuple = Array.isArray(action);
-
-        if (isActionWithProps) {
-          this.storeAction(action, props);
-        } else if (isStateEffectTuple) {
-          this.storeState(action[0]);
-
-          action.slice(1).forEach(fx => this.storeEffect(fx));
-        } else { // just a state update
-          this.storeState(action);
-        }
-
-        return originalDispatch(action, props);
-      };
-
-      return this.augmentedDispatch;
-    };
-  }
-
-  onAction(_actionFn, _props, _id) { }
-  onState(_state) { }
-  onEffect(_effectFn, _props) { }
-  onSubscriptions(_subs, _details) { }
-
-  storeAction(actionFn, props) {
-    const previousAction = this.latestAction;
-    const id = `${actionFn.name || 'action'}.${Date.now()}`;
-
-    this.currentAction = {
-      previousAction,
-      nextActions: {},
-      id,
-      actionFn,
+  const startAction = (fn, props, timestamp) => {
+    self.currentAction = {
+      name: fn.name,
+      fn,
       props,
       state: null,
       effects: [],
-      subscriptions: {
-        sequence: [],
-        started: [],
-        stabilized: [],
-        stopped: [],
-      },
-      timestamp: Date.now(),
+      timestamp,
     };
+  };
 
-    if (previousAction) {
-      previousAction.nextActions[id] = this.currentAction;
-    }
-    this.latestAction = this.currentAction;
+  const endAction = (state, effects = []) => {
+    self.currentAction = {
+      ...self.currentAction,
+      state,
+      effects,
+    };
+    self.history.push(self.currentAction);
+  };
 
-    this.actions.push(this.currentAction);
-    this.onAction(actionFn, props, this.currentAction.id);
-  }
+  self.offAll = (eventName) => {
+    if (!(eventName in events)) return self;
+    events[eventName] = [];
+    return self;
+  };
+  self.off = (eventName, fn) => {
+    if (!(eventName in events)) return self;
 
-  storeState(state) {
-    this.currentAction.state = state;
-    this.onState(state);
-  }
+    const index = events[eventName].findIndex((setFn) => setFn === fn);
+    events[eventName].splice(index, 1);
+    return self;
+  };
+  self.on = (eventName, fn) => {
+    if (!(eventName in events)) return self;
 
-  storeEffect(effect) {
-    this.currentAction.effects.push(effect);
-    this.onEffect(effect[0], effect[1]);
-  }
+    events[eventName].push(fn);
+    return self;
+  };
+  self.trigger = (eventName, ...params) => {
+    if (!(eventName in events)) return self;
 
-  subscriptionsOverride() {
-    if (!this.appProps.subscriptions) return undefined;
+    const fns = events[eventName];
+    fns.forEach((fn) =>
+      schedule(() =>
+        fn(
+          `%c[%cHyperappDebug:%c${name}%c]`,
+          "color: red;",
+          "color: black",
+          "color: blue;",
+          "color: black;",
+          ...params
+        )
+      )
+    );
+    return self;
+  };
 
-    const sameProps = (a, b) => Object.keys({ ...a, ...b }).every(k => a[k] == b[k]);
-
-    return (state) => {
-      const nextSubs = this.appProps.subscriptions(state);
-
-      const sequence = nextSubs
-        .filter(s => s)
-        .map(([effect, props]) => ({
-          effect,
-          props,
-          id: makeId(),
-          count: 1,
-        }));
-
-      const stopped = this.actions.length > 1
-        ? [...this.actions[this.actions.length - 2].subscriptions.sequence.filter(s => s)]
-        : [];
-
-      const started = [];
-      const stabilized = [];
-
-      for (let nextIndex = 0; nextIndex < sequence.length; nextIndex++) {
-        const nextSub = sequence[nextIndex];
-        if (!nextSub) continue;
-
-        const prevIndex = stopped.findIndex(({ effect, props }) => (
-          nextSub.effect === effect
-          && sameProps(nextSub.props, props)
-        ));
-
-        if (prevIndex >= 0) {
-          const stabilizedSub = stopped.splice(prevIndex, 1);
-          stabilized.push({
-            ...stabilizedSub,
-            count: stabilizedSub.count + 1,
-          });
-        } else if (prevIndex === -1) {
-          started.push(nextSub);
+  self.timeTravelDispatch = (dispatch) => {
+    self.parentDispatch = dispatch;
+    return (action, props) => {
+      if (pausedAt) {
+        if (typeof action === "function") {
+          console.warn(
+            `Hyperapp Debugger has prevented ${name} from running an action (${action.name}) because this application is paused.`
+          );
         }
+        return;
       }
 
-      this.currentAction.subscriptions = {
-        sequence,
-        started,
-        stabilized,
-        stopped,
-      };
+      const isActionWithProps = typeof action === "function";
+      const isStateEffectTuple = Array.isArray(action);
 
-      stopped
-        .filter(({ effect, props, count }) => {
-          if (count > 1) return;
-          return started.some(s => (
-            s.effect.name === effect.name
-            && sameProps(props, s.props)
-            && s.count === 1
-            && s.effect.toString() === effect.toString()
-          ));
-        })
-        .forEach((badSub) => {
-          this.onWarning(
-            `A subscription (${badSub.effect.name}) is frequently restarting. This may be from an inline subscription effect function.`,
-            {
-              badSub,
-              function: badSub.effect.toString()
-
-            },
+      if (isActionWithProps) {
+        startAction(fn, props, Date.now());
+      } else if (isStateEffectTuple) {
+        endAction(action[0], action.slice(1));
+        self.trigger("onState", { state: action[0] });
+        action
+          .slice(1)
+          .forEach((fx) =>
+            self.trigger("onEffect", { fn: fx[0], props: fx[1] })
           );
-        });
+      } else {
+        endAction(action, []);
+        self.trigger("onState", { state: action });
+      }
 
-      this.onSubscriptions(this.currentAction.subscriptions.sequence, this.currentAction.subscriptions)
-
-      return nextSubs;
+      return dispatch(action, props);
     };
-  }
-}
+  };
+
+  self.on("onAction", (entry) =>
+    self.trigger("log", entry.name, entry.props, entry.fn)
+  );
+  self.on("onSubscriptionStart", (entry) =>
+    self.trigger("log", entry.name, entry.props, entry.fn)
+  );
+  self.on("onState", (entry) => self.trigger("info", entry.state));
+
+  self.pause = () => {
+    if (!self.parentDispatch) {
+      return self.trigger(
+        "warn",
+        "Unable to use timetravel features without augmenting hyperapp dispatch"
+      );
+    }
+    self.pausedAt = Date.now();
+    return self.trigger("onPause", self);
+  };
+  self.resume = () => {
+    if (!self.parentDispatch) {
+      return self.trigger(
+        "warn",
+        "Unable to use timetravel features without augmenting hyperapp dispatch"
+      );
+    }
+    self.pausedAt = null;
+    return self.trigger("onResume", self);
+  };
+  const timeTravelTo = (entry) => {
+    if (!self.parentDispatch) {
+      return self.trigger(
+        "warn",
+        "Unable to use timetravel features without augmenting hyperapp dispatch"
+      );
+    }
+    if (!entry) {
+      return self;
+    }
+    self.parentDispatch(entry.state);
+    return self;
+  };
+  self.rewind = (step = 1) => {
+    const index = self.historyIndex - step;
+    return timeTravelTo(self.history[index]);
+  };
+  self.fastforward = (step = 1) => {
+    const index = self.historyIndex + step;
+    return timeTravelTo(self.history[index]);
+  };
+
+  return self;
+};
